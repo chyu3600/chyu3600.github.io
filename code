@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CodeMind • AI 程式碼筆記本</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+        body { font-family: 'Noto Sans TC', system-ui, sans-serif; }
+        .code-editor { font-family: ui-monospace, monospace; }
+        .bottom-nav { box-shadow: 0 -1px 3px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen pb-20">
+    <div class="max-w-xl mx-auto">
+        
+        <!-- 標題列 -->
+        <div class="sticky top-0 bg-gray-950 border-b border-gray-800 z-50">
+            <div class="px-5 py-4 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-brain text-violet-500 text-2xl"></i>
+                    <h1 class="text-2xl font-bold">CodeMind</h1>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button onclick="toggleTheme()" class="p-2 text-gray-400 hover:text-white">
+                        <i class="fa-solid fa-moon"></i>
+                    </button>
+                    <button onclick="showAddModal()" 
+                            class="bg-violet-600 hover:bg-violet-700 px-5 py-2 rounded-2xl flex items-center gap-2 text-sm font-medium">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>新增片段</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 搜尋列 -->
+        <div class="px-5 py-4 sticky top-14 bg-gray-950 z-40 border-b border-gray-800">
+            <div class="relative">
+                <input id="searchInput" 
+                       type="text" 
+                       placeholder="搜尋程式碼、標籤或 AI 來源..."
+                       onkeyup="filterSnippets()"
+                       class="w-full bg-gray-900 border border-gray-700 rounded-3xl py-4 pl-12 text-base focus:outline-none focus:border-violet-500">
+                <i class="fa-solid fa-magnifying-glass absolute left-5 top-1/2 -translate-y-1/2 text-gray-500"></i>
+            </div>
+        </div>
+
+        <!-- 內容區域 -->
+        <div id="listView" class="px-4">
+            <!-- JS 動態渲染 -->
+        </div>
+
+        <!-- 空狀態 -->
+        <div id="emptyState" class="hidden flex flex-col items-center justify-center py-20 text-center px-6">
+            <i class="fa-solid fa-code text-7xl text-gray-700 mb-6"></i>
+            <p class="text-xl font-medium mb-2">還沒有程式碼片段</p>
+            <p class="text-gray-500">點擊下方 + 按鈕開始記錄您的 AI 生成程式碼</p>
+        </div>
+    </div>
+
+    <!-- 底部導航 -->
+    <div class="fixed bottom-0 left-0 right-0 max-w-xl mx-auto bg-gray-900 border-t border-gray-800 bottom-nav">
+        <div class="flex justify-around py-2">
+            <button onclick="switchTab(0)" class="tab-btn flex-1 py-3 flex flex-col items-center text-violet-400">
+                <i class="fa-solid fa-house text-xl"></i>
+                <span class="text-xs mt-1">全部</span>
+            </button>
+            <button onclick="switchTab(1)" class="tab-btn flex-1 py-3 flex flex-col items-center text-gray-400">
+                <i class="fa-solid fa-tags text-xl"></i>
+                <span class="text-xs mt-1">標籤</span>
+            </button>
+            <button onclick="switchTab(2)" class="tab-btn flex-1 py-3 flex flex-col items-center text-gray-400">
+                <i class="fa-solid fa-robot text-xl"></i>
+                <span class="text-xs mt-1">AI 來源</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- 新增/編輯 Modal -->
+    <div id="modal" class="hidden fixed inset-0 bg-black/80 flex items-end z-50">
+        <div class="bg-gray-900 w-full rounded-t-3xl max-h-[92%] overflow-auto">
+            <div class="p-5">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 id="modalTitle" class="text-2xl font-semibold">新增程式碼片段</h2>
+                    <button onclick="hideModal()" class="text-4xl text-gray-500 leading-none">×</button>
+                </div>
+
+                <form id="snippetForm" onsubmit="saveSnippet(event)">
+                    <input type="hidden" id="editId">
+
+                    <!-- 標題 -->
+                    <input id="title" type="text" placeholder="片段標題" required
+                           class="w-full bg-gray-800 border border-gray-700 rounded-2xl px-5 py-4 mb-4 text-lg">
+
+                    <!-- 語言 -->
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">語言</label>
+                            <select id="language" class="w-full bg-gray-800 border border-gray-700 rounded-2xl px-5 py-4">
+                                <option value="javascript">JavaScript</option>
+                                <option value="python">Python</option>
+                                <option value="html">HTML</option>
+                                <option value="css">CSS</option>
+                                <option value="java">Java</option>
+                                <option value="cpp">C++</option>
+                                <option value="sql">SQL</option>
+                                <option value="other">其他</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">AI 來源</label>
+                            <input id="aiSource" type="text" placeholder="ChatGPT-4o / Gemini / Claude..."
+                                   class="w-full bg-gray-800 border border-gray-700 rounded-2xl px-5 py-4">
+                        </div>
+                    </div>
+
+                    <!-- 程式碼 -->
+                    <label class="block text-xs text-gray-400 mb-1">程式碼</label>
+                    <textarea id="code" rows="12" 
+                              class="code-editor w-full bg-gray-950 border border-gray-700 rounded-3xl p-5 font-mono text-sm resize-y min-h-[260px]"></textarea>
+
+                    <!-- 標籤 -->
+                    <div class="mt-5">
+                        <label class="block text-xs text-gray-400 mb-2">標籤（逗號分隔）</label>
+                        <input id="tags" type="text" placeholder="react, api, auth, utility..."
+                               class="w-full bg-gray-800 border border-gray-700 rounded-2xl px-5 py-4">
+                    </div>
+
+                    <!-- 備註 -->
+                    <textarea id="notes" rows="3" placeholder="備註、用途說明..."
+                              class="mt-5 w-full bg-gray-800 border border-gray-700 rounded-3xl p-5"></textarea>
+
+                    <div class="flex gap-4 mt-8">
+                        <button type="button" onclick="hideModal()" 
+                                class="flex-1 py-4 text-lg font-medium border border-gray-700 rounded-3xl">取消</button>
+                        <button type="submit" 
+                                class="flex-1 py-4 text-lg font-medium bg-violet-600 hover:bg-violet-700 rounded-3xl">儲存</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let snippets = [];
+        let currentFilter = 'all';
+        let isDark = true;
+
+        function loadData() {
+            const saved = localStorage.getItem('codeMindSnippets');
+            snippets = saved ? JSON.parse(saved) : [];
+        }
+
+        function saveData() {
+            localStorage.setItem('codeMindSnippets', JSON.stringify(snippets));
+        }
+
+        function renderSnippets(filtered = snippets) {
+            const container = document.getElementById('listView');
+            const empty = document.getElementById('emptyState');
+            
+            if (filtered.length === 0) {
+                container.innerHTML = '';
+                empty.classList.remove('hidden');
+                return;
+            }
+            
+            empty.classList.add('hidden');
+            
+            let html = '';
+            filtered.forEach(snippet => {
+                const tagsHtml = snippet.tags ? snippet.tags.map(tag => 
+                    `<span class="inline-block bg-gray-800 text-xs px-3 py-1 rounded-full mr-1 mb-1">${tag}</span>`
+                ).join('') : '';
+                
+                html += `
+                <div class="bg-gray-900 border border-gray-800 rounded-3xl p-5 mb-4">
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <h3 class="font-semibold text-lg">${snippet.title}</h3>
+                            <div class="flex items-center gap-3 text-xs text-gray-400 mt-1">
+                                <span class="uppercase">${snippet.language}</span>
+                                ${snippet.aiSource ? `<span class="bg-violet-900/30 text-violet-400 px-2.5 py-0.5 rounded-full">${snippet.aiSource}</span>` : ''}
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="editSnippet('${snippet.id}')" class="p-2 text-gray-400 hover:text-white">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
+                            <button onclick="deleteSnippet('${snippet.id}')" class="p-2 text-red-400 hover:text-red-500">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <pre class="bg-gray-950 rounded-2xl p-4 overflow-x-auto text-sm"><code class="language-${snippet.language}">${escapeHtml(snippet.code)}</code></pre>
+                    
+                    ${tagsHtml ? `<div class="mt-4">${tagsHtml}</div>` : ''}
+                    
+                    <div class="flex justify-between mt-5 text-xs">
+                        <button onclick="copyCode('${snippet.id}')" 
+                                class="flex items-center gap-2 text-emerald-400 hover:text-emerald-500">
+                            <i class="fa-solid fa-copy"></i>
+                            <span>複製程式碼</span>
+                        </button>
+                        <span class="text-gray-500">${new Date(snippet.createdAt).toLocaleDateString('zh-TW')}</span>
+                    </div>
+                </div>`;
+            });
+            
+            container.innerHTML = html;
+            hljs.highlightAll();
+        }
+
+        function escapeHtml(text) {
+            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+
+        function showAddModal() {
+            document.getElementById('modalTitle').textContent = '新增程式碼片段';
+            document.getElementById('snippetForm').reset();
+            document.getElementById('editId').value = '';
+            document.getElementById('modal').classList.remove('hidden');
+        }
+
+        function hideModal() {
+            document.getElementById('modal').classList.add('hidden');
+        }
+
+        function saveSnippet(e) {
+            e.preventDefault();
+            
+            const id = document.getElementById('editId').value || 'snip_' + Date.now();
+            
+            const newSnippet = {
+                id: id,
+                title: document.getElementById('title').value.trim(),
+                code: document.getElementById('code').value,
+                language: document.getElementById('language').value,
+                aiSource: document.getElementById('aiSource').value.trim(),
+                tags: document.getElementById('tags').value.split(',').map(t => t.trim()).filter(t => t),
+                notes: document.getElementById('notes').value.trim(),
+                createdAt: new Date().toISOString()
+            };
+            
+            if (document.getElementById('editId').value) {
+                snippets = snippets.map(s => s.id === id ? newSnippet : s);
+            } else {
+                snippets.unshift(newSnippet);
+            }
+            
+            saveData();
+            renderSnippets();
+            hideModal();
+        }
+
+        function editSnippet(id) {
+            const snippet = snippets.find(s => s.id === id);
+            if (!snippet) return;
+            
+            document.getElementById('editId').value = snippet.id;
+            document.getElementById('title').value = snippet.title;
+            document.getElementById('code').value = snippet.code;
+            document.getElementById('language').value = snippet.language;
+            document.getElementById('aiSource').value = snippet.aiSource || '';
+            document.getElementById('tags').value = snippet.tags ? snippet.tags.join(', ') : '';
+            document.getElementById('notes').value = snippet.notes || '';
+            
+            document.getElementById('modalTitle').textContent = '編輯程式碼片段';
+            document.getElementById('modal').classList.remove('hidden');
+        }
+
+        function deleteSnippet(id) {
+            if (!confirm('確定要刪除此程式碼片段？')) return;
+            snippets = snippets.filter(s => s.id !== id);
+            saveData();
+            renderSnippets();
+        }
+
+        function copyCode(id) {
+            const snippet = snippets.find(s => s.id === id);
+            if (!snippet) return;
+            
+            navigator.clipboard.writeText(snippet.code).then(() => {
+                alert('✅ 已複製到剪貼簿');
+            });
+        }
+
+        function filterSnippets() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            
+            const filtered = snippets.filter(snippet => 
+                snippet.title.toLowerCase().includes(query) ||
+                (snippet.aiSource && snippet.aiSource.toLowerCase().includes(query)) ||
+                (snippet.code && snippet.code.toLowerCase().includes(query)) ||
+                (snippet.tags && snippet.tags.some(tag => tag.toLowerCase().includes(query)))
+            );
+            
+            renderSnippets(filtered);
+        }
+
+        function toggleTheme() {
+            // 目前為深色模式為主，未來可擴展
+            alert('深色模式已優化，更多主題開發中');
+        }
+
+        function switchTab(tab) {
+            // 未來可擴展不同分頁，目前顯示全部
+            renderSnippets();
+        }
+
+        // 初始化
+        function init() {
+            loadData();
+            renderSnippets();
+            hljs.configure({languages: ['javascript', 'python', 'html', 'css', 'java', 'sql']});
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
