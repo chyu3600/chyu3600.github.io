@@ -1,0 +1,312 @@
+圓半徑求長度
+
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>錐度長度與重量計算器 (碳鋼)</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            padding: 30px;
+            max-width: 420px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        h1 {
+            text-align: center;
+            color: #1a1a1a;
+            font-size: 22px;
+            margin: 0 0 15px 0;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 15px;
+        }
+        .material-info {
+            background-color: #e9ecef;
+            color: #495057;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 13px;
+            text-align: center;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+        .input-group {
+            margin-bottom: 5px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #444;
+            font-size: 14px;
+        }
+        .input-wrapper {
+            position: relative;
+        }
+        .input-field {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+        .input-field:focus {
+            border-color: #007bff;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.15);
+        }
+        .unit-label {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #888;
+            font-size: 14px;
+            pointer-events: none;
+        }
+        .calculate-btn {
+            width: 100%;
+            padding: 16px;
+            background-color: #007bff;
+            color: #ffffff;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            margin-top: 15px;
+        }
+        .calculate-btn:hover {
+            background-color: #0056b3;
+        }
+        .calculate-btn:active {
+            transform: scale(0.98);
+        }
+        
+        /* 結果區域樣式 */
+        .results-group {
+            margin-top: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            display: none; /* 初始隱藏 */
+        }
+        .result-container {
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        .result-length {
+            background-color: #e6f7ff;
+            border: 1px solid #91d5ff;
+        }
+        .result-weight {
+            background-color: #f6ffed;
+            border: 1px solid #b7eb8f;
+        }
+        .result-title {
+            font-weight: 600;
+            color: #555;
+            font-size: 14px;
+            margin-bottom: 8px;
+            display: block;
+        }
+        .result-value {
+            font-size: 32px;
+            color: #1a1a1a;
+            font-weight: 700;
+        }
+        .result-unit {
+            font-size: 16px;
+            color: #666;
+            margin-left: 5px;
+            font-weight: 500;
+        }
+
+        /* 簡圖區域樣式 */
+        .diagram-container {
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px dashed #ddd;
+            text-align: center;
+        }
+        .diagram-title {
+            font-weight: 600;
+            color: #777;
+            font-size: 14px;
+            margin-bottom: 15px;
+            display: block;
+        }
+        .cone-diagram {
+            width: 100%;
+            max-width: 300px;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .footer-info {
+            margin-top: 15px;
+            font-size: 12px;
+            color: #a0a0a0;
+            text-align: center;
+            border-top: 1px solid #eee;
+            padding-top: 10px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>錐度與重量計算</h1>
+        
+        <div class="material-info">
+            預設材質：一般碳鋼 (密度: 7.85 g/cm³)
+        </div>
+
+        <div class="input-group">
+            <label for="largeDia">大頭直徑 (D)</label>
+            <div class="input-wrapper">
+                <input type="number" id="largeDia" class="input-field" step="0.001" placeholder="例如: 35.000">
+                <span class="unit-label">mm</span>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label for="smallDia">小頭直徑 (d)</label>
+            <div class="input-wrapper">
+                <input type="number" id="smallDia" class="input-field" step="0.001" placeholder="例如: 18.000">
+                <span class="unit-label">mm</span>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label for="angle">錐度角度 (α)</label>
+            <div class="input-wrapper">
+                <input type="number" id="angle" class="input-field" step="0.001" placeholder="例如: 18.800">
+                <span class="unit-label">度 (°)</span>
+            </div>
+        </div>
+
+        <button class="calculate-btn" onclick="calculateAll()">開始計算</button>
+
+        <div class="results-group" id="resultsBlock">
+            <div class="result-container result-length">
+                <span class="result-title">1. 計算結果：錐度長度 (L)</span>
+                <span class="result-value" id="resLength">0.000</span>
+                <span class="result-unit">mm</span>
+            </div>
+            
+            <div class="result-container result-weight">
+                <span class="result-title">2. 估算重量 (一般碳鋼)</span>
+                <span class="result-value" id="resWeight">0.000</span>
+                <span class="result-unit">g</span>
+            </div>
+        </div>
+
+        <div class="diagram-container">
+            <span class="diagram-title">錐度計算簡圖</span>
+            <svg class="cone-diagram" viewBox="0 0 320 180" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <marker id="arrowhead" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                        <polygon points="0 0, 6 3, 0 6" fill="#666"/>
+                    </marker>
+                </defs>
+                
+                <polygon points="60,150 210,120 210,60 60,30" fill="#f8f9fa" stroke="#444" stroke-width="2"/>
+                
+                <line x1="60" y1="30" x2="20" y2="30" stroke="#888" stroke-width="1" stroke-dasharray="2,2"/>
+                <line x1="60" y1="150" x2="20" y2="150" stroke="#888" stroke-width="1" stroke-dasharray="2,2"/>
+                <line x1="30" y1="30" x2="30" y2="150" stroke="#666" stroke-width="1" marker-start="url(#arrowhead)" marker-end="url(#arrowhead)"/>
+                <text x="15" y="90" transform="rotate(-90 15 90)" font-size="13" fill="#333" font-weight="600">D</text>
+                
+                <line x1="210" y1="60" x2="250" y2="60" stroke="#888" stroke-width="1" stroke-dasharray="2,2"/>
+                <line x1="210" y1="120" x2="250" y2="120" stroke="#888" stroke-width="1" stroke-dasharray="2,2"/>
+                <line x1="240" y1="60" x2="240" y2="120" stroke="#666" stroke-width="1" marker-start="url(#arrowhead)" marker-end="url(#arrowhead)"/>
+                <text x="255" y="90" transform="rotate(-90 255 90)" font-size="13" fill="#333" font-weight="600">d</text>
+                
+                <line x1="60" y1="150" x2="60" y2="175" stroke="#888" stroke-width="1" stroke-dasharray="2,2"/>
+                <line x1="210" y1="120" x2="210" y2="175" stroke="#888" stroke-width="1" stroke-dasharray="2,2"/>
+                <line x1="60" y1="170" x2="210" y2="170" stroke="#007bff" stroke-width="1.5" marker-start="url(#arrowhead)" marker-end="url(#arrowhead)"/>
+                <text x="135" y="165" text-anchor="middle" font-size="13" fill="#007bff" font-weight="600">L</text>
+                
+                <line x1="210" y1="60" x2="250" y2="60" stroke="#888" stroke-width="1" stroke-dasharray="4,4"/>
+                <path d="M 240,60 A 30,30 0 0 0 233,47" fill="none" stroke="#dc3545" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+                <text x="245" y="50" font-size="13" fill="#dc3545" font-weight="600">α</text>
+            </svg>
+        </div>
+
+        <div class="footer-info">
+            長度公式：L = (D - d) / 2 / tan(α)<br>
+            重量公式：V = (π*L/12) * (D² + D*d + d²), W = V * 0.00785 (單位：g)
+        </div>
+    </div>
+
+    <script>
+        function calculateAll() {
+            // 1. 獲取並解析輸入值
+            const D = parseFloat(document.getElementById('largeDia').value);
+            const d = parseFloat(document.getElementById('smallDia').value);
+            const angle = parseFloat(document.getElementById('angle').value);
+
+            // 獲取顯示元素
+            const resultsBlock = document.getElementById('resultsBlock');
+            const resLengthText = document.getElementById('resLength');
+            const resWeightText = document.getElementById('resWeight');
+
+            // 2. 驗證輸入
+            if (isNaN(D) || isNaN(d) || isNaN(angle)) {
+                alert("請填寫所有輸入框。");
+                resultsBlock.style.display = 'none';
+                return;
+            }
+            if (D <= d) {
+                alert("大頭直徑 (D) 必須大於小頭直徑 (d)。");
+                resultsBlock.style.display = 'none';
+                return;
+            }
+            if (angle <= 0 || angle >= 90) {
+                alert("錐度角度 (α) 必須在 0 到 90 度之間。");
+                resultsBlock.style.display = 'none';
+                return;
+            }
+
+            // 3. 計算錐度長度 L (單位: mm)
+            const radians = angle * Math.PI / 180; // 角度轉弧度
+            const L = (D - d) / 2 / Math.tan(radians);
+
+            // 4. 計算碳鋼重量 W (單位: g，直接輸出公克，不再轉公斤)
+            // 碳鋼密度: 7.85 g/cm³ = 0.00785 g/mm³
+            const density = 0.00785; 
+            // 圓錐台體積公式 (單位: mm³)
+            const volume = (Math.PI * L / 12) * (Math.pow(D, 2) + (D * d) + Math.pow(d, 2));
+            // 重量直接為公克 g，移除 /1000 公斤轉換
+            const weightGram = volume * density;
+
+            // 5. 顯示結果，強制保留小數三位
+            resLengthText.innerText = L.toFixed(3);
+            resWeightText.innerText = weightGram.toFixed(3);
+            resultsBlock.style.display = 'flex';
+        }
+    </script>
+</body>
+</html>
