@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI 智能助理</title>
+<title>忠鍵大模型</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
 body{background:#f5f7fa;height:100vh;display:flex;flex-direction:column;color:#111}
@@ -55,7 +55,7 @@ footer{background:#fff;border-top:1px solid #e5e9f2;padding:10px 12px;padding-bo
 </head>
 <body>
 <header>
-  <h1>🤖 AI 智能助理</h1>
+  <h1>🤖 忠鍵大模型</h1>
   <div class="hbar">
     <select id="modelSel">
       <option value="agnes-2.5-flash" selected>Agnes 2.5 Flash</option>
@@ -103,7 +103,7 @@ const keyInp = document.getElementById('keyInp');
 
 let history = [];
 
-const SYS = {role:'system', content:'你是「工程計算工具箱」網站的 AI 助理，擅長機械、材料、製造、工程計算與程式設計。回答精準、條理分明，需要時計算過程一步一步列出，數字保留適當位數。必要時可用簡潔的表格或條列。用繁體中文回答。'};
+const SYS = {role:'system', content:'你是「忠鍵大模型」，忠鍵工程計算工具箱網站的 AI 助理，擅長機械、材料、製造、工程計算與程式設計。回答精準、條理分明，需要時計算過程一步一步列出，數字保留適當位數。必要時可用簡潔的表格或條列。用繁體中文回答。'};
 
 // ---------- API Key 視窗 ----------
 function getKey(){ return localStorage.getItem('agnes_key') || ''; }
