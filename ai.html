@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 智能助理</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
+body{background:#f5f7fa;height:100vh;display:flex;flex-direction:column;color:#111}
+header{background:#2563ff;color:#fff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 10px rgba(0,0,0,.15);z-index:2}
+header h1{font-size:19px;font-weight:600}
+header a{color:#fff;text-decoration:none;font-size:14px;background:rgba(255,255,255,.2);padding:6px 12px;border-radius:8px}
+.hbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+#modelSel{background:rgba(255,255,255,.18);color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:8px;padding:6px 8px;font-size:13px}
+#modelSel option{color:#111}
+#chat{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+.msg{max-width:85%;padding:12px 14px;border-radius:16px;font-size:15px;line-height:1.65;white-space:pre-wrap;word-break:break-word;animation:pop .2s ease}
+@keyframes pop{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.user{align-self:flex-end;background:#2563ff;color:#fff;border-bottom-right-radius:4px}
+.ai{align-self:flex-start;background:#fff;border-bottom-left-radius:4px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.hint{align-self:center;background:#fff3cd;color:#7a5c00;border:1px solid #ffe08a;padding:12px 14px;border-radius:12px;font-size:13px;max-width:92%;text-align:center}
+.hint a{color:#2563ff;font-weight:600;cursor:pointer}
+.typing{align-self:flex-start;background:#fff;border-radius:16px;padding:14px 18px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.typing span{display:inline-block;width:7px;height:7px;background:#2563ff;border-radius:50%;margin:0 2px;animation:b 1.2s infinite}
+.typing span:nth-child(2){animation-delay:.15s}
+.typing span:nth-child(3){animation-delay:.3s}
+@keyframes b{0%,60%,100%{transform:none;opacity:.4}30%{transform:translateY(-5px);opacity:1}}
+footer{background:#fff;border-top:1px solid #e5e9f2;padding:10px 12px;padding-bottom:calc(10px + env(safe-area-inset-bottom))}
+.frow{display:flex;gap:8px;align-items:flex-end}
+#inp{flex:1;border:1.5px solid #d7dde8;border-radius:14px;padding:11px 13px;font-size:15px;resize:none;max-height:120px;outline:none;background:#fafbfd;font-family:inherit}
+#inp:focus{border-color:#2563ff;background:#fff}
+#send{background:#2563ff;color:#fff;border:none;border-radius:14px;width:46px;height:46px;font-size:20px;cursor:pointer;flex-shrink:0;transition:background .2s}
+#send:disabled{background:#a8bdfa;cursor:not-allowed}
+#send:not(:disabled):hover{background:#1d4ed8}
+#clear{background:none;border:none;color:#8a93a6;font-size:12px;cursor:pointer;padding:4px 2px}
+.err{align-self:center;background:#fde8e8;color:#b91c1c;border:1px solid #fbb;padding:10px 14px;border-radius:12px;font-size:13px;max-width:92%}
+
+/* ===== API Key 輸入視窗 ===== */
+#keyModal{position:fixed;inset:0;background:rgba(15,23,42,.55);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;z-index:99;padding:20px}
+#keyModal.hide{display:none}
+.kcard{background:#fff;border-radius:20px;padding:26px 22px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.3);animation:pop .25s ease}
+.kcard h2{font-size:19px;margin-bottom:6px;color:#111}
+.kcard p{font-size:13px;color:#667;line-height:1.6;margin-bottom:14px}
+.kcard input{width:100%;border:1.5px solid #d7dde8;border-radius:12px;padding:12px 13px;font-size:15px;outline:none;background:#fafbfd}
+.kcard input:focus{border-color:#2563ff;background:#fff}
+.kbtns{display:flex;gap:10px;margin-top:16px}
+.kbtns button{flex:1;padding:13px;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer}
+#kSave{background:#2563ff;color:#fff}
+#kSave:hover{background:#1d4ed8}
+#kCancel{background:#eef1f6;color:#556}
+#kCancel:hover{background:#e2e7f0}
+.knote{margin-top:12px;font-size:11.5px;color:#99a;display:flex;gap:6px;align-items:flex-start;line-height:1.5}
+.knote b{color:#2563ff}
+</style>
+</head>
+<body>
+<header>
+  <h1>🤖 AI 智能助理</h1>
+  <div class="hbar">
+    <select id="modelSel">
+      <option value="agnes-2.5-flash" selected>Agnes 2.5 Flash</option>
+      <option value="agnes-2.0-flash">Agnes 2.0 Flash</option>
+    </select>
+    <a href="index.html">← 工具箱</a>
+  </div>
+</header>
+
+<div id="chat"></div>
+
+<footer>
+  <div class="frow">
+    <textarea id="inp" rows="1" placeholder="輸入問題…（工程計算、材料、程式都可以問）"></textarea>
+    <button id="send" title="送出">➤</button>
+  </div>
+  <button id="clear">🧹 清除對話 &nbsp;·&nbsp; 🔑 更換 API Key</button>
+</footer>
+
+<!-- API Key 輸入視窗 -->
+<div id="keyModal" class="hide">
+  <div class="kcard">
+    <h2>🔑 設定 API Key</h2>
+    <p>請輸入你的 Agnes API Key（<code>sk-</code> 開頭）：</p>
+    <input id="keyInp" type="password" placeholder="sk-xxxxxxxxxxxxxxxx" autocomplete="off">
+    <label style="display:flex;align-items:center;gap:8px;margin-top:10px;font-size:13px;color:#556">
+      <input id="keyShow" type="checkbox" style="width:auto"> 顯示金鑰
+    </label>
+    <div class="kbtns">
+      <button id="kCancel">取消</button>
+      <button id="kSave">儲存 ✓</button>
+    </div>
+    <div class="knote">🔒 金鑰只會保存在<b>你的手機瀏覽器</b>（localStorage），不會傳到 GitHub 或任何第三方，關閉網頁後依然保留。</div>
+  </div>
+</div>
+
+<script>
+const API_URL = 'https://apihub.agnes-ai.com/v1/chat/completions';
+const chat = document.getElementById('chat');
+const inp = document.getElementById('inp');
+const send = document.getElementById('send');
+const modelSel = document.getElementById('modelSel');
+const keyModal = document.getElementById('keyModal');
+const keyInp = document.getElementById('keyInp');
+
+let history = [];
+
+const SYS = {role:'system', content:'你是「工程計算工具箱」網站的 AI 助理，擅長機械、材料、製造、工程計算與程式設計。回答精準、條理分明，需要時計算過程一步一步列出，數字保留適當位數。必要時可用簡潔的表格或條列。用繁體中文回答。'};
+
+// ---------- API Key 視窗 ----------
+function getKey(){ return localStorage.getItem('agnes_key') || ''; }
+function openKeyModal(prefill){
+  keyModal.classList.remove('hide');
+  keyInp.value = prefill === false ? '' : getKey();
+  keyInp.focus();
+}
+function closeKeyModal(){ keyModal.classList.add('hide'); }
+document.getElementById('kSave').onclick = () => {
+  const k = keyInp.value.trim();
+  if(!k){ keyInp.style.borderColor='#e33'; keyInp.focus(); return; }
+  localStorage.setItem('agnes_key', k);
+  closeKeyModal();
+  if(!getKey()) location.reload();
+};
+document.getElementById('kCancel').onclick = closeKeyModal;
+document.getElementById('keyShow').onchange = e => { keyInp.type = e.target.checked ? 'text' : 'password'; };
+keyModal.addEventListener('click', e => { if(e.target === keyModal) closeKeyModal(); });
+
+// ---------- 訊息渲染 ----------
+function addMsg(cls, text){
+  const d = document.createElement('div');
+  d.className = cls;
+  d.textContent = text;
+  chat.appendChild(d);
+  chat.scrollTop = chat.scrollHeight;
+  return d;
+}
+function firstHint(){
+  const d = document.createElement('div');
+  d.className = 'hint';
+  d.innerHTML = '🔑 第一次使用請先 <a id="k1">設定 API Key</a><br>💡 可以問我：304 不鏽鋼圓棒 Ø50×200mm 重量？';
+  chat.appendChild(d);
+  d.querySelector('#k1').onclick = () => openKeyModal();
+}
+
+// ---------- 呼叫 API（串流）----------
+async function ask(){
+  const text = inp.value.trim();
+  if(!text) return;
+  let key = getKey();
+  if(!key){
+    openKeyModal();
+    const wait = setInterval(() => {
+      if(getKey()){ clearInterval(wait); ask(); }
+      else if(keyModal.classList.contains('hide')){ clearInterval(wait); inp.value = text; }
+    }, 300);
+    return;
+  }
+
+  inp.value = ''; inp.style.height = 'auto';
+  addMsg('user', text);
+  history.push({role:'user', content:text});
+
+  send.disabled = true;
+  const typing = document.createElement('div');
+  typing.className = 'typing';
+  typing.innerHTML = '<span></span><span></span><span></span>';
+  chat.appendChild(typing); chat.scrollTop = chat.scrollHeight;
+
+  const bubble = document.createElement('div');
+  bubble.className = 'ai';
+  try{
+    const resp = await fetch(API_URL, {
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+      body: JSON.stringify({
+        model: modelSel.value,
+        messages: [SYS, ...history.slice(-16)],
+        stream: true,
+        temperature: 0.6
+      })
+    });
+    typing.remove();
+    if(!resp.ok){
+      const e = await resp.text();
+      throw new Error('HTTP '+resp.status+' — '+e.slice(0,200));
+    }
+    chat.appendChild(bubble);
+    const reader = resp.body.getReader();
+    const dec = new TextDecoder();
+    let buf = '', full = '';
+    while(true){
+      const {done, value} = await reader.read();
+      if(done) break;
+      buf += dec.decode(value, {stream:true});
+      const lines = buf.split('\n'); buf = lines.pop();
+      for(const line of lines){
+        if(!line.startsWith('data:')) continue;
+        const data = line.slice(5).trim();
+        if(data === '[DONE]') continue;
+        try{
+          const j = JSON.parse(data);
+          const t = j.choices?.[0]?.delta?.content || '';
+          if(t){ full += t; bubble.textContent = full; chat.scrollTop = chat.scrollHeight; }
+        }catch(_){}
+      }
+    }
+    history.push({role:'assistant', content: full || '（無回應）'});
+  }catch(err){
+    typing.remove(); bubble.remove();
+    const e = document.createElement('div');
+    e.className = 'err';
+    const m = String(err.message);
+    e.textContent = '⚠️ ' + err.message + (m.includes('401')||m.includes('令牌') ? ' → API Key 可能錯誤，點下方「更換 API Key」重設。' : '');
+    chat.appendChild(e); chat.scrollTop = chat.scrollHeight;
+  }
+  send.disabled = false;
+  inp.focus();
+}
+
+send.onclick = ask;
+inp.addEventListener('keydown', e => {
+  if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); ask(); }
+});
+inp.addEventListener('input', () => {
+  inp.style.height = 'auto';
+  inp.style.height = Math.min(inp.scrollHeight, 120) + 'px';
+});
+document.getElementById('clear').onclick = () => {
+  if(confirm('清除所有對話紀錄？')){ history = []; chat.innerHTML = ''; firstHint(); }
+};
+document.getElementById('clear').oncontextmenu = e => {
+  e.preventDefault();
+  if(confirm('清除對話並更換 API Key？')){ localStorage.removeItem('agnes_key'); location.reload(); }
+};
+
+firstHint();
+if(!getKey()) setTimeout(() => openKeyModal(), 400);
+inp.focus();
+</script>
+</body>
+</html>
