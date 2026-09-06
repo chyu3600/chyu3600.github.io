@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>金屬重量計算</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
+body{background:#fff;padding:24px 16px;max-width:560px;margin:0 auto;color:#111}
+.back{display:inline-block;margin-bottom:14px;color:#2563ff;text-decoration:none;font-size:16px}
+h1{font-size:26px;text-align:center;margin-bottom:22px}
+.card{background:#f5f7fa;border-radius:16px;padding:20px;margin-bottom:16px}
+label{display:block;font-size:14px;color:#555;margin:14px 0 6px}
+select,input{width:100%;padding:12px;border:1.5px solid #d8dde5;border-radius:10px;font-size:17px;background:#fff}
+input:focus,select:focus{outline:none;border-color:#2563ff}
+button{width:100%;margin-top:20px;padding:15px;background:#2563ff;color:#fff;border:none;border-radius:12px;font-size:18px;cursor:pointer}
+button:active{background:#1d4ed8}
+#result{display:none;background:#e8f0fe;border-radius:16px;padding:22px;text-align:center;margin-top:16px}
+#result .num{font-size:38px;font-weight:bold;color:#2563ff}
+#result .sub{font-size:14px;color:#666;margin-top:6px}
+</style>
+</head>
+<body>
+<a class="back" href="index.html">← 返回首頁</a>
+<h1>⚙️ 金屬重量計算</h1>
+
+<div class="card">
+<label>材質</label>
+<select id="mat">
+<option value="7.85">鋼（低碳鋼）7.85 g/cm³</option>
+<option value="7.93">不鏽鋼 304 — 7.93</option>
+<option value="7.98">不鏽鋼 316 — 7.98</option>
+<option value="2.70">鋁 — 2.70</option>
+<option value="8.50">黃銅 — 8.50</option>
+<option value="8.96">銅 — 8.96</option>
+<option value="4.51">鈦 — 4.51</option>
+<option value="7.20">鑄鐵 — 7.20</option>
+<option value="7.14">鋅 — 7.14</option>
+<option value="11.34">鉛 — 11.34</option>
+</select>
+
+<label>形狀</label>
+<select id="shape">
+<option value="plate">板材（長 × 寬 × 厚）</option>
+<option value="bar">圓棒（直徑 × 長）</option>
+<option value="tube">圓管（外徑 × 壁厚 × 長）</option>
+<option value="square">方棒（邊長 × 長）</option>
+</select>
+
+<div id="plateFields">
+<label>長度 L（mm）</label><input type="number" id="pl" inputmode="decimal">
+<label>寬度 W（mm）</label><input type="number" id="pw" inputmode="decimal">
+<label>厚度 T（mm）</label><input type="number" id="pt" inputmode="decimal">
+</div>
+
+<div id="barFields" style="display:none">
+<label>直徑 D（mm）</label><input type="number" id="bd" inputmode="decimal">
+<label>長度 L（mm）</label><input type="number" id="bl" inputmode="decimal">
+</div>
+
+<div id="tubeFields" style="display:none">
+<label>外徑 OD（mm）</label><input type="number" id="to" inputmode="decimal">
+<label>壁厚 t（mm）</label><input type="number" id="tt" inputmode="decimal">
+<label>長度 L（mm）</label><input type="number" id="tl" inputmode="decimal">
+</div>
+
+<div id="squareFields" style="display:none">
+<label>邊長 A（mm）</label><input type="number" id="sa" inputmode="decimal">
+<label>長度 L（mm）</label><input type="number" id="sl" inputmode="decimal">
+</div>
+
+<button onclick="calc()">計算重量</button>
+</div>
+
+<div id="result">
+<div class="num" id="weight">—</div>
+<div class="sub" id="detail"></div>
+</div>
+
+<script>
+var shapeEl=document.getElementById('shape');
+shapeEl.addEventListener('change',function(){
+var v=shapeEl.value;
+['plateFields','barFields','tubeFields','squareFields'].forEach(function(id){
+document.getElementById(id).style.display='none';
+});
+document.getElementById(v+'Fields').style.display='';
+});
+function calc(){
+var d=parseFloat(document.getElementById('mat').value);
+var v=shapeEl.value,vol=0,names={plate:'板材',bar:'圓棒',tube:'圓管',square:'方棒'};
+if(v==='plate'){
+vol=parseFloat(document.getElementById('pl').value)*parseFloat(document.getElementById('pw').value)*parseFloat(document.getElementById('pt').value)/1000;
+}else if(v==='bar'){
+vol=Math.PI/4*Math.pow(parseFloat(document.getElementById('bd').value),2)*parseFloat(document.getElementById('bl').value)/1000;
+}else if(v==='tube'){
+var od=parseFloat(document.getElementById('to').value),t=parseFloat(document.getElementById('tt').value);
+var idd=od-2*t;
+if(idd<0){alert('壁厚太大：內徑為負值');return;}
+vol=Math.PI/4*(od*od-idd*idd)*parseFloat(document.getElementById('tl').value)/1000;
+}else{
+vol=Math.pow(parseFloat(document.getElementById('sa').value),2)*parseFloat(document.getElementById('sl').value)/1000;
+}
+if(!vol||vol<=0){alert('請填入所有尺寸');return;}
+var w=vol*d/1000;
+document.getElementById('result').style.display='block';
+document.getElementById('weight').textContent=w.toFixed(3)+' kg';
+document.getElementById('detail').textContent='體積 '+vol.toFixed(1)+' cm³ × 密度 '+d+' g/cm³';
+document.getElementById('result').scrollIntoView({behavior:'smooth'});
+}
+</script>
+</body>
+</html>

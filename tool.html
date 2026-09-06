@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>常用工程工具</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
+body{background:#fff;padding:24px 16px;max-width:560px;margin:0 auto;color:#111}
+.back{display:inline-block;margin-bottom:14px;color:#2563ff;text-decoration:none;font-size:16px}
+h1{font-size:26px;text-align:center;margin-bottom:22px}
+.card{background:#f5f7fa;border-radius:16px;padding:18px;margin-bottom:14px}
+.card h2{font-size:17px;color:#2563ff;margin-bottom:12px}
+.row{display:flex;gap:10px;align-items:center}
+.row input{flex:1;padding:12px;border:1.5px solid #d8dde5;border-radius:10px;font-size:17px;background:#fff;min-width:0}
+.row input:focus{outline:none;border-color:#2563ff}
+.row select{padding:12px;border:1.5px solid #d8dde5;border-radius:10px;font-size:15px;background:#fff}
+.eq{flex:0 0 auto;color:#2563ff;font-weight:bold;font-size:18px}
+small{display:block;color:#888;font-size:12px;margin-top:8px}
+</style>
+</head>
+<body>
+<a class="back" href="index.html">← 返回首頁</a>
+<h1>🧰 常用工程工具</h1>
+
+<div class="card">
+<h2>長度換算</h2>
+<div class="row">
+<input type="number" id="lenIn" inputmode="decimal" placeholder="輸入數值" oninput="convLen()">
+<select id="lenU" onchange="convLen()">
+<option value="mm">mm</option>
+<option value="in">inch</option>
+<option value="m">m</option>
+<option value="ft">ft</option>
+</select>
+<span class="eq">=</span>
+<input type="number" id="lenOut" inputmode="decimal" placeholder="結果" readonly>
+<select id="lenU2" onchange="convLen()">
+<option value="mm" selected>mm</option>
+<option value="in">inch</option>
+<option value="m">m</option>
+<option value="ft">ft</option>
+</select>
+</div>
+<small>1 in = 25.4 mm · 1 ft = 304.8 mm</small>
+</div>
+
+<div class="card">
+<h2>力換算</h2>
+<div class="row">
+<input type="number" id="fIn" inputmode="decimal" placeholder="輸入數值" oninput="convF()">
+<select id="fU" onchange="convF()">
+<option value="kgf">kgf</option>
+<option value="N">N</option>
+<option value="lbf">lbf</option>
+</select>
+<span class="eq">=</span>
+<input type="number" id="fOut" inputmode="decimal" placeholder="結果" readonly>
+<select id="fU2" onchange="convF()">
+<option value="kgf">kgf</option>
+<option value="N" selected>N</option>
+<option value="lbf">lbf</option>
+</select>
+</div>
+<small>1 kgf = 9.80665 N · 1 lbf = 4.4482 N</small>
+</div>
+
+<div class="card">
+<h2>壓力換算</h2>
+<div class="row">
+<input type="number" id="pIn" inputmode="decimal" placeholder="輸入數值" oninput="convP()">
+<select id="pU" onchange="convP()">
+<option value="MPa">MPa</option>
+<option value="psi">psi</option>
+<option value="kgfcm2">kgf/cm²</option>
+<option value="bar">bar</option>
+</select>
+<span class="eq">=</span>
+<input type="number" id="pOut" inputmode="decimal" placeholder="結果" readonly>
+<select id="pU2" onchange="convP()">
+<option value="MPa">MPa</option>
+<option value="psi" selected>psi</option>
+<option value="kgfcm2">kgf/cm²</option>
+<option value="bar">bar</option>
+</select>
+</div>
+<small>1 MPa = 145.038 psi = 10.197 kgf/cm² = 10 bar</small>
+</div>
+
+<div class="card">
+<h2>扭矩換算</h2>
+<div class="row">
+<input type="number" id="tIn" inputmode="decimal" placeholder="輸入數值" oninput="convT()">
+<select id="tU" onchange="convT()">
+<option value="Nm">N·m</option>
+<option value="kgfm">kgf·m</option>
+<option value="lbfft">lbf·ft</option>
+</select>
+<span class="eq">=</span>
+<input type="number" id="tOut" inputmode="decimal" placeholder="結果" readonly>
+<select id="tU2" onchange="convT()">
+<option value="Nm" selected>N·m</option>
+<option value="kgfm">kgf·m</option>
+<option value="lbfft">lbf·ft</option>
+</select>
+</div>
+<small>1 kgf·m = 9.80665 N·m · 1 lbf·ft = 1.3558 N·m</small>
+</div>
+
+<div class="card">
+<h2>溫度換算</h2>
+<div class="row">
+<input type="number" id="tempIn" inputmode="decimal" placeholder="°C" oninput="convTemp()">
+<span class="eq">°C =</span>
+<input type="number" id="tempOut" inputmode="decimal" placeholder="°F" readonly>
+<span class="eq">°F</span>
+</div>
+<small>°F = °C × 9/5 + 32</small>
+</div>
+
+<script>
+var LEN={mm:1,in:25.4,m:1000,ft:304.8};
+function convLen(){
+var v=parseFloat(document.getElementById('lenIn').value);
+if(isNaN(v)){document.getElementById('lenOut').value='';return;}
+var u1=document.getElementById('lenU').value,u2=document.getElementById('lenU2').value;
+document.getElementById('lenOut').value=(v*LEN[u1]/LEN[u2]).toPrecision(6).replace(/\.?0+$/,'');
+}
+var F={kgf:9.80665,N:1,lbf:4.4482};
+function convF(){
+var v=parseFloat(document.getElementById('fIn').value);
+if(isNaN(v)){document.getElementById('fOut').value='';return;}
+var u1=document.getElementById('fU').value,u2=document.getElementById('fU2').value;
+document.getElementById('fOut').value=(v*F[u1]/F[u2]).toPrecision(6).replace(/\.?0+$/,'');
+}
+var P={MPa:1,psi:0.00689476,kgfcm2:0.0980665,bar:0.1};
+function convP(){
+var v=parseFloat(document.getElementById('pIn').value);
+if(isNaN(v)){document.getElementById('pOut').value='';return;}
+var u1=document.getElementById('pU').value,u2=document.getElementById('pU2').value;
+document.getElementById('pOut').value=(v*P[u1]/P[u2]).toPrecision(6).replace(/\.?0+$/,'');
+}
+var T={Nm:1,kgfm:9.80665,lbfft:1.3558};
+function convT(){
+var v=parseFloat(document.getElementById('tIn').value);
+if(isNaN(v)){document.getElementById('tOut').value='';return;}
+var u1=document.getElementById('tU').value,u2=document.getElementById('tU2').value;
+document.getElementById('tOut').value=(v*T[u1]/T[u2]).toPrecision(6).replace(/\.?0+$/,'');
+}
+function convTemp(){
+var v=parseFloat(document.getElementById('tempIn').value);
+if(isNaN(v)){document.getElementById('tempOut').value='';return;}
+document.getElementById('tempOut').value=Math.round((v*9/5+32)*100)/100;
+}
+</script>
+</body>
+</html>
