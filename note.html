@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>現場記錄器</title>
+<style>
+*{box-sizing:border-box;font-family:system-ui,sans-serif;margin:0;padding:0}
+body{padding:16px;background:#f5f7fa;color:#222;transition:background .3s,color .3s}
+.container{max-width:600px;margin:0 auto;background:#fff;padding:20px;border-radius:12px;box-shadow:0 2px 10px #00000015;transition:background .3s}
+h2{text-align:center;margin-bottom:6px;font-size:20px}
+.sub{text-align:center;color:#888;font-size:13px;margin-bottom:16px}
+.item{margin-bottom:12px}
+label{display:block;margin-bottom:6px;font-weight:500;font-size:15px}
+input,select,textarea{width:100%;padding:10px;border:1px solid #ccc;border-radius:8px;font-size:16px;transition:background .3s,color .3s}
+textarea{min-height:120px;resize:vertical;line-height:1.6}
+.btn{width:100%;padding:12px;background:#2563eb;color:#fff;border:none;border-radius:8px;font-size:16px;margin-top:8px;cursor:pointer}
+.btn.gray{background:#6b7280}
+.btn.green{background:#059669}
+.search{margin:18px 0 8px;display:flex;gap:8px}
+.search input{flex:1}
+.list{margin-top:14px}
+.note{background:#f0f4ff;border-radius:10px;padding:14px;margin-bottom:12px;border-left:4px solid #2563eb}
+.note.gear{border-left-color:#0d9488}
+.note.maint{border-left-color:#d97706}
+.note.other{border-left-color:#6b7280}
+.note .meta{color:#999;font-size:12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px}
+.note .tag{display:inline-block;color:#fff;font-size:11px;padding:1px 9px;border-radius:12px;background:#2563eb}
+.note.gear .tag{background:#0d9488}
+.note.maint .tag{background:#d97706}
+.note.other .tag{background:#6b7280}
+.note h3{font-size:17px;margin:4px 0 8px;line-height:1.4}
+.note p{font-size:14px;line-height:1.7;white-space:pre-wrap;color:#444}
+.note .ops{margin-top:10px;display:flex;gap:8px}
+.note .ops button{padding:6px 14px;border:none;border-radius:6px;font-size:13px;cursor:pointer;background:#e5e7eb;color:#333}
+.note .ops button.del{background:#fee2e2;color:#b91c1c}
+.note .ops button.pub{background:#dbeafe;color:#1d4ed8}
+.tools{display:flex;gap:8px;margin-top:14px}
+.tools .btn{margin-top:0}
+#ioBox{display:none;margin-top:12px}
+#ioBox textarea{min-height:140px;font-size:12px;font-family:monospace}
+.count{text-align:center;color:#888;font-size:13px;margin-top:10px}
+.back{text-align:center;margin-top:18px}
+.back a{color:#2563eb;text-decoration:none;font-size:15px;font-weight:600}
+body.dark{background:#1a1a2e;color:#eee}
+body.dark .container{background:#27293d}
+body.dark input,body.dark select,body.dark textarea{background:#373a50;color:#eee;border-color:#555}
+body.dark .note{background:#2f3354}
+body.dark .note p{color:#ccc}
+body.dark .note .ops button{background:#454968;color:#eee}
+body.dark .note .ops button.del{background:#5c2b2b;color:#fca5a5}
+body.dark .note .ops button.pub{background:#2b3f6b;color:#93c5fd}
+body.dark .search input{background:#373a50;color:#eee}
+</style>
+</head>
+<body>
+<div class="container">
+<h2>📓 現場記錄器</h2>
+<p class="sub">隨手記加工參數・模具進度・設備狀況（儲存在本機瀏覽器）</p>
+
+<div class="item">
+<label>分類</label>
+<select id="cat">
+<option value="gear">模具日誌</option>
+<option value="work">加工筆記</option>
+<option value="maint">設備維護</option>
+<option value="other">其他</option>
+</select>
+</div>
+
+<div class="item">
+<label>標題</label>
+<input type="text" id="title" placeholder="例如：M-006 沖頭研磨完成">
+</div>
+
+<div class="item">
+<label>內容</label>
+<textarea id="content" placeholder="例如：&#10;轉速 1200 rpm、進給 0.08 mm/rev&#10;研磨量 0.3mm，表面良好"></textarea>
+</div>
+
+<input type="hidden" id="editId" value="">
+<button class="btn green" id="saveBtn" onclick="saveNote()">💾 儲存記錄</button>
+
+<div class="search">
+<input type="text" id="q" placeholder="🔍 搜尋標題或內容…" oninput="render()">
+</div>
+
+<div class="list" id="list"></div>
+<p class="count" id="count"></p>
+
+<div class="tools">
+<button class="btn gray" style="flex:1" onclick="toggleIO()">📦 備份／匯入</button>
+<button class="btn gray" style="flex:1" onclick="document.body.classList.toggle('dark')">🌗 日夜切換</button>
+</div>
+<div id="ioBox">
+<div class="item" style="margin-top:10px">
+<label>匯出（複製這段文字保存；或貼到聊天給我永久發佈）</label>
+<textarea id="ioOut" readonly></textarea>
+</div>
+<div class="item">
+<label>匯入（貼上先前備份的文字 → 匯入）</label>
+<textarea id="ioIn" placeholder="貼上備份內容…"></textarea>
+</div>
+<button class="btn gray" onclick="importNotes()">⬇️ 匯入</button>
+</div>
+
+<div class="back"><a href="index.html">← 返回工具箱首頁</a></div>
+</div>
+
+<script>
+const KEY='zj_notes_v1';
+const CATN={gear:'模具日誌',work:'加工筆記',maint:'設備維護',other:'其他'};
+
+function load(){try{return JSON.parse(localStorage.getItem(KEY))||[]}catch(e){return[]}}
+function store(a){localStorage.setItem(KEY,JSON.stringify(a))}
+
+function saveNote(){
+  const t=document.getElementById('title').value.trim();
+  const c=document.getElementById('content').value.trim();
+  if(!t&&!c){alert('請輸入標題或內容');return}
+  const arr=load();
+  const id=document.getElementById('editId').value;
+  if(id){
+    const n=arr.find(x=>x.id==id);
+    if(n){n.cat=document.getElementById('cat').value;n.title=t||'（無標題）';n.content=c;n.ts=Date.now()}
+    document.getElementById('editId').value='';
+    document.getElementById('saveBtn').innerText='💾 儲存記錄';
+  }else{
+    arr.unshift({id:Date.now(),cat:document.getElementById('cat').value,title:t||'（無標題）',content:c,ts:Date.now()});
+  }
+  store(arr);
+  document.getElementById('title').value='';
+  document.getElementById('content').value='';
+  render();
+}
+
+function delNote(id){
+  if(!confirm('確定刪除這筆記錄？'))return;
+  store(load().filter(x=>x.id!=id));
+  render();
+}
+
+function editNote(id){
+  const n=load().find(x=>x.id==id);
+  if(!n)return;
+  document.getElementById('cat').value=n.cat;
+  document.getElementById('title').value=n.title;
+  document.getElementById('content').value=n.content;
+  document.getElementById('editId').value=n.id;
+  document.getElementById('saveBtn').innerText='✏️ 更新記錄';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function copyNote(id){
+  const n=load().find(x=>x.id==id);
+  if(!n)return;
+  const d=new Date(n.ts);
+  const txt=`【${CATN[n.cat]}】${n.title}\n${d.toLocaleDateString('zh-TW')} ${d.toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'})}\n\n${n.content}`;
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(()=>alert('已複製，可貼到聊天傳給我發佈'))}
+  else{alert('長按內容手動複製：\n\n'+txt)}
+}
+
+function render(){
+  const q=(document.getElementById('q').value||'').toLowerCase();
+  const arr=load().filter(n=>!q||(n.title+n.content+CATN[n.cat]).toLowerCase().includes(q));
+  const box=document.getElementById('list');
+  if(!arr.length){box.innerHTML='<p style="text-align:center;color:#999;padding:20px">尚無記錄，從上方開始輸入第一筆 📝</p>'}
+  else{
+    box.innerHTML=arr.map(n=>{
+      const d=new Date(n.ts);
+      const ds=`${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+      return `<div class="note ${n.cat}"><div class="meta"><span class="tag">${CATN[n.cat]}</span><span>${ds}</span></div><h3>${esc(n.title)}</h3><p>${esc(n.content)}</p><div class="ops"><button onclick="editNote(${n.id})">✏️ 編輯</button><button class="del" onclick="delNote(${n.id})">🗑 刪除</button><button class="pub" onclick="copyNote(${n.id})">📋 複製</button></div></div>`;
+    }).join('');
+  }
+  document.getElementById('count').innerText=`共 ${arr.length} 筆記錄`;
+}
+
+function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+function toggleIO(){
+  const b=document.getElementById('ioBox');
+  b.style.display=b.style.display==='none'?'block':'none';
+  if(b.style.display==='block'){document.getElementById('ioOut').value=JSON.stringify(load())}
+}
+
+function importNotes(){
+  try{
+    const data=JSON.parse(document.getElementById('ioIn').value);
+    if(!Array.isArray(data))throw 0;
+    const old=load();const ids=new Set(old.map(x=>x.id));
+    let n=0;data.forEach(x=>{if(x&&x.id&&!ids.has(x.id)){old.push(x);ids.add(x.id);n++}});
+    store(old);render();alert(`匯入完成，新增 ${n} 筆`);
+    document.getElementById('ioIn').value='';
+  }catch(e){alert('匯入失敗：格式不正確')}
+}
+
+render();
+</script>
+</body>
+</html>
