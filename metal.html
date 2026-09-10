@@ -100,9 +100,9 @@ vol=Math.PI/4*(od*od-idd*idd)*parseFloat(document.getElementById('tl').value)/10
 vol=Math.pow(parseFloat(document.getElementById('sa').value),2)*parseFloat(document.getElementById('sl').value)/1000;
 }
 if(!vol||vol<=0){alert('請填入所有尺寸');return;}
-var w=vol*d/1000;
+var w=vol*d;
 document.getElementById('result').style.display='block';
-document.getElementById('weight').textContent=w.toFixed(3)+' kg';
+document.getElementById('weight').textContent=w.toFixed(3)+' g';
 document.getElementById('detail').textContent='體積 '+vol.toFixed(1)+' cm³ × 密度 '+d+' g/cm³';
 document.getElementById('result').scrollIntoView({behavior:'smooth'});
 }
