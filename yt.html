@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>影片連結 · 冷鍛平台</title>
+<style>
+*{box-sizing:border-box;font-family:system-ui,-apple-system,sans-serif;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{background:#f2f4f8;display:flex;flex-direction:column}
+header{background:linear-gradient(135deg,#011640,#0d3a6e);padding:16px 16px 14px;flex-shrink:0;display:flex;align-items:center;gap:11px}
+header .bk{background:#ffffff1c;border:none;color:#dbe7ff;border-radius:9px;padding:8px 13px;font-size:15px;cursor:pointer}
+header h1{font-size:17px;font-weight:800;color:#fff;flex:1}
+.wrap{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 16px 40px;max-width:560px;margin:0 auto;width:100%}
+
+.card{background:#fff;border:1px solid #eef1f6;border-radius:14px;padding:16px;margin-bottom:14px;box-shadow:0 2px 8px #0a1a3a08}
+.card h3{font-size:16px;font-weight:800;color:#17233d;margin-bottom:6px;display:flex;align-items:center;gap:7px}
+.card .hint{font-size:12.5px;color:#8a94a6;margin-bottom:12px;line-height:1.6}
+.input-row{display:flex;gap:9px}
+#ytUrl{flex:1;border:2px solid #d6dce8;border-radius:10px;padding:12px 13px;font-size:15px;outline:none;min-width:0}
+#ytUrl:focus{border-color:#1163f0}
+#goBtn{background:#1163f0;color:#fff;border:none;border-radius:10px;padding:12px 18px;font-size:15px;font-weight:700;cursor:pointer;flex-shrink:0}
+#goBtn:active{transform:scale(.93)}
+#msg{font-size:12.5px;margin-top:9px;min-height:18px}
+#msg.err{color:#dc2626}
+#msg.ok{color:#059669}
+
+.saved-title{font-size:15px;font-weight:800;color:#17233d;margin:6px 0 10px;display:flex;align-items:center;gap:7px}
+.saved{display:flex;align-items:center;gap:11px;background:#fff;border:1px solid #eef1f6;border-radius:13px;padding:12px 13px;margin-bottom:10px;box-shadow:0 2px 8px #0a1a3a08}
+.saved .thumb{width:64px;height:44px;border-radius:8px;background:#011640;flex-shrink:0;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:20px}
+.saved .thumb::after{content:'▶';color:#fff;font-size:15px}
+.saved .tx{flex:1;min-width:0}
+.saved .t{font-size:14px;font-weight:700;color:#1a2437;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.saved .d{font-size:11.5px;color:#98a2b3;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.saved .del{background:#fee2e2;color:#b91c1c;border:none;border-radius:8px;padding:7px 10px;font-size:13px;cursor:pointer;flex-shrink:0}
+.empty{text-align:center;color:#b0b9c8;font-size:13px;padding:22px 0}
+</style>
+</head>
+<body>
+<header>
+  <button class="bk" onclick="goBack()">‹ 返回</button>
+  <h1>🎬 影片連結</h1>
+</header>
+<div class="wrap">
+
+  <div class="card">
+    <h3>▶️ 貼上 YouTube 連結</h3>
+    <p class="hint">支援各種 YouTube 網址格式（youtu.be、watch?v=、shorts）。貼上後按「開啟」直接跳轉播放；勾「收藏」會存到下方清單（存在手機內，不怕遺失需定期開啟）。</p>
+    <div class="input-row">
+      <input id="ytUrl" type="url" placeholder="https://youtu.be/xxxxxxxx" inputmode="url" autocomplete="off">
+      <button id="goBtn" onclick="openLink()">開啟</button>
+    </div>
+    <div id="msg"></div>
+    <div style="display:flex;gap:9px;margin-top:12px">
+      <button style="flex:1;background:#0116401a;border:1px solid #01164033;color:#011640;border-radius:10px;padding:11px;font-size:14px;font-weight:700;cursor:pointer" onclick="saveLink()">⭐ 收藏此連結</button>
+      <button style="flex:1;background:#0116401a;border:1px solid #01164033;color:#011640;border-radius:10px;padding:11px;font-size:14px;font-weight:700;cursor:pointer" onclick="document.getElementById('ytUrl').focus()">📋 貼上</button>
+    </div>
+  </div>
+
+  <div class="saved-title" id="savedTitle" style="display:none">⭐ 我的影片收藏</div>
+  <div id="savedList"></div>
+</div>
+
+<script>
+function goBack(){
+  location.href='https://chyu3600.github.io/app.html';
+}
+function $(id){return document.getElementById(id)}
+function normUrl(u){
+  u=(u||'').trim();
+  if(!u) return null;
+  // 補 https
+  if(!/^https?:\/\//i.test(u)) u='https://'+u;
+  // 驗證是否 YouTube
+  if(/youtu\.be|youtube\.com/i.test(u)) return u;
+  return null;
+}
+function vidId(u){
+  const m=u.match(/(?:youtu\.be\/|v=|shorts\/|embed\/)([\w-]{6,})/);
+  return m?m[1]:null;
+}
+function openLink(){
+  const u=normUrl($('ytUrl').value);
+  const msg=$('msg');
+  if(!u){msg.className='err';msg.textContent='❌ 請貼上有效的 YouTube 連結（例如 https://youtu.be/xxxx）';return}
+  msg.className='ok';msg.textContent='✅ 正在跳轉…';
+  location.href=u;
+}
+function saveLink(){
+  const u=normUrl($('ytUrl').value);
+  const msg=$('msg');
+  if(!u){msg.className='err';msg.textContent='❌ 先貼上有效的 YouTube 連結再收藏';return}
+  const list=JSON.parse(localStorage.getItem('yt_fav')||'[]');
+  if(list.some(x=>x.url===u)){msg.className='ok';msg.textContent='⭐ 已在收藏清單中';return}
+  list.unshift({url:u,ts:Date.now()});
+  localStorage.setItem('yt_fav',JSON.stringify(list.slice(0,50)));
+  render();
+  msg.className='ok';msg.textContent='✅ 已收藏！可在下方清單點開';
+}
+function delLink(i){
+  const list=JSON.parse(localStorage.getItem('yt_fav')||'[]');
+  list.splice(i,1);
+  localStorage.setItem('yt_fav',JSON.stringify(list));
+  render();
+}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;')}
+function render(){
+  const list=JSON.parse(localStorage.getItem('yt_fav')||'[]');
+  $('savedTitle').style.display=list.length?'flex':'none';
+  const box=$('savedList');
+  if(!list.length){box.innerHTML='';return}
+  box.innerHTML=list.map((x,i)=>`
+    <div class="saved">
+      <div class="thumb"></div>
+      <div class="tx" onclick="location.href='${esc(x.url)}'">
+        <div class="t">YouTube 影片</div>
+        <div class="d">${esc(x.url.replace('https://','').slice(0,40))} · ${new Date(x.ts).toLocaleDateString('zh-TW')}</div>
+      </div>
+      <button class="del" onclick="delLink(${i})">🗑</button>
+    </div>`).join('');
+}
+document.getElementById('ytUrl').addEventListener('keydown',e=>{
+  if(e.key==='Enter') openLink();
+});
+// 支援從剪貼板快速貼上（iOS Safari 的 readText 若可用）
+document.getElementById('ytUrl').addEventListener('focus',()=>{
+  if(navigator.clipboard && navigator.clipboard.readText && !$('ytUrl').value){
+    navigator.clipboard.readText().then(t=>{
+      if(/youtu\.be|youtube\.com/i.test(t)){ $('ytUrl').value=t.trim(); }
+    }).catch(()=>{});
+  }
+});
+render();
+</script>
+</body>
+</html>

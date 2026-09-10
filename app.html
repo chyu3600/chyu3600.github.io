@@ -125,7 +125,7 @@ body{background:#f2f4f8;overflow:hidden;position:fixed;width:100%}
       </div>
     </div>
     <div id="content">
-      <div class="notice"><span class="tag">公告</span><span class="txt">冷鍛基礎教學已上線，新進人員請先完成四章學習 → /forge/teach</span></div>
+      <div class="notice"><span class="tag">公告</span><span class="txt" id="noticeTxt">冷鍛基礎教學已上線，新進人員請先完成四章學習</span></div>
 
       <div class="sec-title"><span class="bar-ico"></span>快捷入口</div>
       <div class="grid">
@@ -136,6 +136,7 @@ body{background:#f2f4f8;overflow:hidden;position:fixed;width:100%}
         <a class="qcard" href="http://129.225.180.201/%E7%AD%86%E8%A8%98%E6%9C%AC.html" target="_blank"><div class="ico ic-teal">📝</div><div class="t">雲筆記本</div><div class="d">永久保存</div></a>
         <a class="qcard" href="https://chyu3600.github.io/note.html" target="_blank"><div class="ico ic-navy">📓</div><div class="t">現場記錄</div><div class="d">隨手速記</div></a>
         <a class="qcard" href="zkai.html"><div class="ico" style="background:linear-gradient(135deg,#1267e9,#7342dc)">🤖</div><div class="t">忠鍵AI</div><div class="d">冷鍛智能體</div></a>
+        <a class="qcard" href="yt.html"><div class="ico" style="background:linear-gradient(135deg,#e02a2a,#c01818)">🎬</div><div class="t">影片連結</div><div class="d">YouTube 跳轉</div></a>
       </div>
 
       <div class="sec-title"><span class="bar-ico"></span>模具管理</div>
@@ -168,6 +169,7 @@ body{background:#f2f4f8;overflow:hidden;position:fixed;width:100%}
 
     <div class="sec-title"><span class="bar-ico"></span>智能助手</div>
     <div class="mrow" onclick="open2('zkai.html')"><div class="ico" style="background:linear-gradient(135deg,#1267e9,#7342dc)">🤖</div><div class="tx"><div class="t">忠鍵AI · 冷鍛智能體</div><div class="d">五模式：冷鍛專家 · 模具顧問 · 教學 · 計算 · 對話</div></div><span class="arrow">›</span></div>
+    <div class="mrow" onclick="open2('yt.html')"><div class="ico" style="background:linear-gradient(135deg,#e02a2a,#c01818)">🎬</div><div class="tx"><div class="t">影片連結跳轉</div><div class="d">貼上 YouTube 連結 → 開啟 · 可收藏清單</div></div><span class="arrow">›</span></div>
 
     <div class="sec-title"><span class="bar-ico"></span>教學系統</div>
     <div class="mrow" onclick="open2('http://129.225.180.201/forge/teach')"><div class="ico ic-green">📖</div><div class="tx"><div class="t">冷鍛基礎教學</div><div class="d">四章可視化 · 新人入門</div></div><span class="arrow">›</span></div>
@@ -247,6 +249,23 @@ function tick(){
   if(el) el.textContent = d.toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
 }
 setInterval(tick, 5000); tick();
+
+// ===== 公告：從編輯後台抓最新內容（失敗就保留預設文字）=====
+(function(){
+  const el = document.getElementById('noticeTxt');
+  if(!el) return;
+  fetch('http://129.225.180.201/forge/api/forging?t=' + Date.now())
+    .then(r=>r.json())
+    .then(d=>{
+      if(d && d.notice && d.notice.trim()){
+        el.textContent = d.notice.trim();
+        el.parentElement.classList.add('has-custom');
+      } else if(d && d.updatedAt){
+        el.textContent = '冷鍛基礎教學已上線，新進人員請先完成四章學習（更新：' + d.updatedAt + '）';
+      }
+    })
+    .catch(()=>{ /* 離線或主機忙，保留預設文字 */ });
+})();
 </script>
 </body>
 </html>
