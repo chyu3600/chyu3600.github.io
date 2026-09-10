@@ -84,6 +84,14 @@ document.getElementById(id).style.display='none';
 });
 document.getElementById(v+'Fields').style.display='';
 });
+// 初始載入時顯示預設形狀的欄位
+(function(){
+var v=shapeEl.value;
+['plateFields','barFields','tubeFields','squareFields'].forEach(function(id){
+document.getElementById(id).style.display='none';
+});
+document.getElementById(v+'Fields').style.display='';
+})();
 function calc(){
 var d=parseFloat(document.getElementById('mat').value);
 var v=shapeEl.value,vol=0,names={bar:'圓棒',tube:'圓管'};
