@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>多工位冷鍛基礎教學</title>
+<style>
+*{box-sizing:border-box;font-family:system-ui,sans-serif;margin:0;padding:0}
+body{padding:16px;background:#f5f7fa;color:#222;transition:background .3s,color .3s}
+.container{max-width:760px;margin:0 auto;background:#fff;padding:20px;border-radius:12px;box-shadow:0 2px 10px #00000015;transition:background .3s}
+h2{text-align:center;margin-bottom:4px;font-size:20px}
+.sub{text-align:center;color:#888;font-size:13px;margin-bottom:16px}
+h3{font-size:17px;color:#2563eb;margin:18px 0 8px}
+p,li{font-size:15px;line-height:1.8;color:#333}
+ul{margin:0 0 12px 22px}
+.stage{border:1px solid #e5e7eb;border-radius:10px;padding:12px;margin:10px 0;background:#fafafa}
+.stage h4{font-size:15px;margin-bottom:6px;color:#111}
+.stage h4 .n{display:inline-block;background:#2563eb;color:#fff;border-radius:50%;width:24px;height:24px;text-align:center;line-height:24px;font-size:13px;margin-right:6px}
+svg{display:block;margin:8px auto;max-width:100%}
+.btn{padding:12px;background:#2563eb;color:#fff;border:none;border-radius:8px;font-size:16px;margin-top:8px;cursor:pointer;width:100%}
+.btn.gray{background:#6b7280}
+.hint{background:#fff7ed;border-left:4px solid #f59e0b;padding:10px 12px;border-radius:6px;margin:10px 0;font-size:14px;line-height:1.7}
+.warn{background:#fef2f2;border-left:4px solid #ef4444;padding:10px 12px;border-radius:6px;margin:10px 0;font-size:14px;line-height:1.7}
+.ok{background:#f0fdf4;border-left:4px solid #22c55e;padding:10px 12px;border-radius:6px;margin:10px 0;font-size:14px;line-height:1.7}
+.legend{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;font-size:12px;color:#555;margin:6px 0}
+.legend span{display:flex;align-items:center;gap:4px}
+.dot{width:12px;height:12px;border-radius:2px;display:inline-block}
+table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13px}
+th,td{border:1px solid #ddd;padding:6px 8px;text-align:left}
+th{background:#f0f4ff}
+.nav{display:flex;gap:8px;margin-top:14px}
+.nav button{flex:1;padding:10px;border:1px solid #2563eb;background:#fff;color:#2563eb;border-radius:8px;font-size:14px;cursor:pointer}
+.nav button.active{background:#2563eb;color:#fff}
+.tab{display:none}
+.tab.active{display:block}
+.back{text-align:center;margin-top:18px}
+.back a{color:#2563eb;text-decoration:none;font-size:15px;font-weight:600}
+.animated{animation:strike 2s ease-in-out infinite}
+@keyframes strike{0%{transform:translateY(0)}45%{transform:translateY(24px)}90%{transform:translateY(0)}100%{transform:translateY(0)}}
+body.dark{background:#1a1a2e;color:#eee}
+body.dark .container{background:#27293d}
+body.dark p,body.dark li{color:#ccc}
+body.dark .stage{background:#2f3354;border-color:#454968}
+body.dark .hint{background:#3d3418;color:#fbbf24}
+body.dark .warn{background:#3d2020;color:#fca5a5}
+body.dark .ok{background:#1d3a25;color:#86efac}
+body.dark th{background:#2f3354}
+body.dark td,body.dark th{border-color:#454968}
+body.dark .nav button{background:#27293d;color:#93c5fd;border-color:#3b5bbf}
+body.dark .nav button.active{background:#2563eb;color:#fff}
+</style>
+</head>
+<body>
+<div class="container">
+<h2>⚙️ 多工位冷鍛基礎教學</h2>
+<p class="sub">可視化圖解 · 新進人員入門 · 點下方頁籤切換章節</p>
+
+<div class="nav">
+<button class="tabbtn active" onclick="showTab(0)">1️⃣ 原理</button>
+<button class="tabbtn" onclick="showTab(1)">2️⃣ 工位流程</button>
+<button class="tabbtn" onclick="showTab(2)">3️⃣ 模具結構</button>
+<button class="tabbtn" onclick="showTab(3)">4️⃣ 參數與品質</button>
+</div>
+
+<!-- TAB 1: 原理 -->
+<div class="tab active" id="tab0">
+<h3>什麼是冷鍛？</h3>
+<p>在<b>常溫</b>下對金屬施加巨大壓力，讓材料塑性流動成型。不加熱，靠「壓」不靠「熔」。</p>
+
+<div class="legend">
+<span><span class="dot" style="background:#94a3b8"></span>胚料（工件）</span>
+<span><span class="dot" style="background:#2563eb"></span>沖棒（Punch）</span>
+<span><span class="dot" style="background:#78716c"></span>模穴（Die）</span>
+</div>
+
+<svg viewBox="0 0 340 150" width="340">
+  <!-- 單站鍛造示意：沖棒下壓 -->
+  <rect x="40" y="20" width="260" height="26" fill="#2563eb" class="animated"/>
+  <text x="170" y="37" fill="#fff" font-size="12" text-anchor="middle">沖棒 Punch ↓</text>
+  <rect x="120" y="46" width="100" height="50" fill="#94a3b8" stroke="#64748b"/>
+  <text x="170" y="75" font-size="11" text-anchor="middle" fill="#334155">胚料</text>
+  <rect x="90" y="96" width="160" height="34" fill="#a8a29e" stroke="#78716c"/>
+  <text x="170" y="117" font-size="11" text-anchor="middle" fill="#fff">模穴 Die</text>
+  <text x="170" y="148" font-size="10" text-anchor="middle" fill="#888">沖壓力讓金屬在模穴內流動成形</text>
+</svg>
+
+<h3>為什麼用「多工位」？</h3>
+<p>一次鍛不了複雜形狀——就像揉麵團不能一拳壓成包子。材料要<b>分站漸進變形</b>，每站變一點，最後才成品。優點：</p>
+<ul>
+<li>✅ 可成型複雜形狀（螺栓頭、齒輪、軸套…）</li>
+<li>✅ 材料流動線連續、強度比切削件高</li>
+<li>✅ 連續高速生產（每分鐘可達 60-300 件）</li>
+<li>✅ 幾乎無料屑浪費</li>
+</ul>
+
+<h3>冷鍛 vs 熱鍛 vs 切削</h3>
+<table>
+<tr><th></th><th>冷鍛</th><th>熱鍛</th><th>切削</th></tr>
+<tr><td>溫度</td><td>常溫</td><td>900-1250℃</td><td>常溫</td></tr>
+<tr><td>表面</td><td>光亮、無氧化皮</td><td>有氧化皮</td><td>依刀具</td></tr>
+<tr><td>強度</td><td>加工硬化高</td><td>中等</td><td>原有強度</td></tr>
+<tr><td>精度</td><td>±0.05mm 級</td><td>±0.5mm 級</td><td>±0.01mm 級</td></tr>
+<tr><td>速度</td><td>極快</td><td>中</td><td>慢</td></tr>
+<tr><td>材料浪費</td><td>極少</td><td>少</td><td>多（切屑）</td></tr>
+</table>
+
+<div class="hint">💡 冷鍛件因加工硬化，強度比原棒材高 20-30%，這是汽車安全件都用冷鍛的原因。</div>
+</div>
+
+<!-- TAB 2: 工位流程 -->
+<div class="tab" id="tab1">
+<h3>典型六工位流程（以六角螺栓為例）</h3>
+
+<div class="stage">
+<h4><span class="n">0</span>切斷 Cutting</h4>
+<svg viewBox="0 0 340 90" width="340">
+<rect x="60" y="30" width="200" height="18" fill="#94a3b8"/>
+<text x="160" y="20" font-size="10" text-anchor="middle" fill="#888">線材送入</text>
+<line x1="200" y1="18" x2="200" y2="60" stroke="#ef4444" stroke-width="3"/>
+<text x="225" y="45" font-size="10" fill="#ef4444">剪斷</text>
+<text x="160" y="80" font-size="10" text-anchor="middle" fill="#888">送線 → 定長 → 剪斷成胚料</text>
+</svg>
+<p>盤元線材經矯直送入，剪成固定長度的短胚。切斷品質影響後面所有工位。</p>
+</div>
+
+<div class="stage">
+<h4><span class="n">1</span>預鍛 Pre-upset（倒角/壓扁）</h4>
+<svg viewBox="0 0 340 90" width="340">
+<rect x="150" y="34" width="40" height="26" rx="4" fill="#94a3b8"/>
+<text x="170" y="80" font-size="10" text-anchor="middle" fill="#888">端面整平、去尖角</text>
+</svg>
+<p>把剪斷的歪斜端面壓平，建立後續變形的基準。變形量小，主要在「整備」。</p>
+</div>
+
+<div class="stage">
+<h4><span class="n">2</span>正鍛 Upsetting（鐓粗）</h4>
+<svg viewBox="0 0 340 100" width="340">
+<rect x="130" y="40" width="80" height="20" fill="#94a3b8"/>
+<text x="170" y="34" font-size="9" text-anchor="middle" fill="#888">變形前</text>
+<rect x="215" y="30" width="18" height="40" fill="#94a3b8" opacity="0.3"/>
+<text x="240" y="50" font-size="10" fill="#2563eb">→</text>
+<rect x="250" y="26" width="60" height="48" fill="#2563eb" opacity="0.75"/>
+<text x="280" y="90" font-size="10" text-anchor="middle" fill="#2563eb">變形後：直徑變大、高度變短</text>
+</svg>
+<p>胚料變短變粗。鐓粗是冷鍛的靈魂——六角頭、法蘭、凸緣都靠這站成型。</p>
+<div class="warn">⚠️ 鐓粗規則：自由鐓粗時高度≤直徑的 2.5-3 倍，否則胚料會彎曲挫屈（buckling）。</div>
+</div>
+
+<div class="stage">
+<h4><span class="n">3</span>擠出 Extrusion（縮徑/擠桿）</h4>
+<svg viewBox="0 0 340 100" width="340">
+<rect x="120" y="35" width="50" height="40" fill="#94a3b8"/>
+<rect x="170" y="35" width="60" height="40" fill="#a8a29e"/>
+<path d="M170 35 L230 50 L230 70 L170 75 Z" fill="#78716c" opacity="0.4"/>
+<rect x="230" y="50" width="70" height="14" fill="#2563eb" opacity="0.8"/>
+<text x="170" y="95" font-size="10" text-anchor="middle" fill="#888">粗胚料被擠過小孔 → 桿部變細變長（正向擠出）</text>
+</svg>
+<p>材料被迫從較小的模口流出，截面積縮小、長度增加。螺栓的桿部就是這樣做出來的。</p>
+</div>
+
+<div class="stage">
+<h4><span class="n">4</span>成型 Forming（六角頭）</h4>
+<svg viewBox="0 0 340 110" width="340">
+<polygon points="250,30 290,53 250,76 210,53" fill="#2563eb"/>
+<rect x="165" y="46" width="45" height="14" fill="#94a3b8"/>
+<text x="250" y="100" font-size="10" text-anchor="middle" fill="#888">正六角頭成型（剖視）</text>
+</svg>
+<p>前面累積的材料量在此站精確填滿六角模穴。此站決定頭部對角尺寸與端面平整度。</p>
+</div>
+
+<div class="stage">
+<h4><span class="n">5</span>整徑/倒角 Trimming</h4>
+<svg viewBox="0 0 340 90" width="340">
+<rect x="220" y="40" width="30" height="18" rx="3" fill="#94a3b8"/>
+<rect x="250" y="40" width="60" height="18" fill="#2563eb" opacity="0.8"/>
+<text x="265" y="75" font-size="10" text-anchor="middle" fill="#888">桿部整徑 + 端面倒角</text>
+</svg>
+<p>桿徑修到公差內、端面去毛邊。此站做完，鍛件體成型完畢，接著送搓牙。</p>
+</div>
+
+<div class="ok">✅ 總結口訣：<b>剪 → 平 → 粗 → 細 → 形 → 修</b>。六站像接力賽，每站都要把好的半成品交給下一棒。</p>
+</div>
+
+<!-- TAB 3: 模具結構 -->
+<div class="tab" id="tab2">
+<h3>冷鍛模具家族</h3>
+<table>
+<tr><th>名稱</th><th>角色</th><th>位置</th></tr>
+<tr><td>主模（陰模）</td><td>圍住材料、決定外形</td><td>固定側</td></tr>
+<tr><td>沖棒（Punch）</td><td>施壓、傳遞成品形狀</td><td>活動側</td></tr>
+<tr><td>心軸（Mandrel）</td><td>做出內孔</td><td>穿入材料</td></tr>
+<tr><td>頂出銷（Kick-out）</td><td>把成品頂出模穴</td><td>主模後方</td></tr>
+<tr><td>剪模</td><td>切斷線材</td><td>第0站</td></tr>
+</table>
+
+<h3>沖棒與主模的關係（剖面圖）</h3>
+<svg viewBox="0 0 340 170" width="340">
+<rect x="120" y="10" width="100" height="22" fill="#2563eb"/>
+<text x="170" y="25" fill="#fff" font-size="11" text-anchor="middle">沖棒</text>
+<rect x="130" y="32" width="80" height="70" fill="#94a3b8" stroke="#64748b"/>
+<text x="170" y="70" font-size="10" text-anchor="middle" fill="#334155">胚料</text>
+<path d="M60 32 L130 32 L130 102 L60 102 Z M210 32 L280 32 L280 102 L210 102 Z" fill="#a8a29e" stroke="#78716c"/>
+<text x="95" y="70" font-size="10" text-anchor="middle" fill="#fff">主模</text>
+<text x="245" y="70" font-size="10" text-anchor="middle" fill="#fff">主模</text>
+<rect x="130" y="102" width="80" height="24" fill="#78716c"/>
+<text x="170" y="118" font-size="10" text-anchor="middle" fill="#fff">頂出銷</text>
+<text x="170" y="145" font-size="10" text-anchor="middle" fill="#888">沖棒從上壓下 → 材料填滿主模穴 → 頂出銷把成品頂出</text>
+<line x1="170" y1="10" x2="170" y2="30" stroke="#ef4444" stroke-width="2" marker-end="url(#arrow)"/>
+</svg>
+
+<h3>模具鋼材選用</h3>
+<table>
+<tr><th>鋼種</th><th>硬度 HRC</th><th>適用</th></tr>
+<tr><td>SKD11</td><td>58-62</td><td>一般沖棒、剪模</td></tr>
+<tr><td>粉末高速鋼（ASP/ELMAX）</td><td>62-64</td><td>高產量、複雜形狀</td></tr>
+<tr><td>碳化鎢（钨鋼）</td><td>86-90 HRA</td><td>主模芯、高耐磨</td></tr>
+<tr><td>SKH-9 高速鋼</td><td>62-64</td><td>心軸、小型沖棒</td></tr>
+</table>
+
+<div class="hint">💡 沖棒斷面積 = 鍛壓力 ÷ 鋼材許用應力。斷面太小會彎曲，太大浪費成本——模具設計就是在強度與成本間取平衡。</div>
+
+<h3>易損件與保養週期（實務參考）</h3>
+<table>
+<tr><th>零件</th><th>壽命參考</th><th>檢查重點</th></tr>
+<tr><td>剪模</td><td>5-15 萬件</td><td>刃口崩角、切斷面毛刺</td></tr>
+<tr><td>沖棒</td><td>1-10 萬件</td><td>端面裂紋、徑向磨耗</td></tr>
+<tr><td>主模芯</td><td>10-30 萬件</td><td>模穴漲大、表面拉傷</td></tr>
+<tr><td>頂出銷</td><td>視設計</td><td>彎曲、端面磨平</td></tr>
+</table>
+</div>
+
+<!-- TAB 4: 參數與品質 -->
+<div class="tab" id="tab3">
+<h3>關鍵製程參數</h3>
+<table>
+<tr><th>參數</th><th>影響</th><th>異常後果</th></tr>
+<tr><td>線材直徑</td><td>體積（重量）</td><td>缺料→頭部不滿；過料→毛邊</td></tr>
+<tr><td>切斷長度</td><td>體積（重量）</td><td>同上</td></tr>
+<tr><td>潤滑皮膜</td><td>流動性、模具壽命</td><td>燒結、咬模、表面刮傷</td></tr>
+<tr><td>鍛造力</td><td>填模率</td><td>不足→死角缺料</td></tr>
+<tr><td>沖棒行程</td><td>成品高度</td><td>墊底（bottoming）→ 尺寸超差</td></tr>
+<tr><td>頂出延遲</td><td>脫模</td><td>成品黏模、拉長</td></tr>
+</table>
+
+<h3>常見不良與對策</h3>
+<table>
+<tr><th>不良</th><th>外觀</th><th>常見原因</th><th>對策</th></tr>
+<tr><td>頭部不滿</td><td>棱線圓鈍</td><td>料重不足、鍛力低、排氣不良</td><td>加料重、增噸位、開排氣孔</td></tr>
+<tr><td>挫屈（彎料）</td><td>站間彎曲</td><td>鐓粗比過大、端面不平</td><td>分站更細、改善切斷面</td></tr>
+<tr><td>裂紋（爆料）</td><td>表面45°裂</td><td>變形量過大、材質硬化</td><td>增加工位、中間退火</td></tr>
+<tr><td>咬模/燒結</td><td>表面撕痕</td><td>潤滑失效、模具粗糙</td><td>重新皮膜處理、拋光模面</td></tr>
+<tr><td>同心度不良</td><td>頭桿偏心</td><td>沖棒與模穴對位偏</td><td>校對模位、檢查模套間隙</td></tr>
+<tr><td>毛邊過大</td><td>分模面飛邊</td><td>料重過多、合模不緊</td><td>減料重、修分模面</td></tr>
+</table>
+
+<h3>品質檢查要點（首件檢查）</h3>
+<ul>
+<li>外觀：裂紋、刮傷、氧化變色、折疊</li>
+<li>尺寸：頭部對邊/對角、桿桿徑、總長（用工具箱的錐度計算驗算）</li>
+<li>重量：抽秤料重（重量=體積分佈的直接指標）</li>
+<li>同心度：V枕 + 百分錶轉一圈</li>
+<li>硬度：抽測 HRC（加工硬化後的分佈）</li>
+</ul>
+
+<div class="hint">💡 實務心法：調機先調「料重」，再調「行程」，最後才微調鍛力。料重不對，其他都白調。</div>
+<div class="ok">✅ 教學完畢！回到工具箱還有金屬重量、齒輪、熱脹冷縮等計算器可搭配使用。</div>
+</div>
+
+<div class="nav" style="margin-top:16px">
+<button class="btn gray" style="flex:1;margin-top:0" onclick="document.body.classList.toggle('dark')">🌗 日夜切換</button>
+<button class="btn gray" style="flex:1;margin-top:0" onclick="window.print()">🖨 列印/存PDF</button>
+</div>
+<div class="back"><a href="index.html">← 返回工具箱首頁</a></div>
+</div>
+
+<script>
+function showTab(n){
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',i===n));
+  document.querySelectorAll('.tabbtn').forEach((b,i)=>b.classList.toggle('active',i===n));
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+</script>
+</body>
+</html>
