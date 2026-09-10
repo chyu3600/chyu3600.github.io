@@ -41,10 +41,8 @@ button:active{background:#1d4ed8}
 
 <label>形狀</label>
 <select id="shape">
-<option value="plate">板材（長 × 寬 × 厚）</option>
 <option value="bar">圓棒（直徑 × 長）</option>
 <option value="tube">圓管（外徑 × 壁厚 × 長）</option>
-<option value="square">方棒（邊長 × 長）</option>
 </select>
 
 <div id="plateFields">
@@ -88,7 +86,7 @@ document.getElementById(v+'Fields').style.display='';
 });
 function calc(){
 var d=parseFloat(document.getElementById('mat').value);
-var v=shapeEl.value,vol=0,names={plate:'板材',bar:'圓棒',tube:'圓管',square:'方棒'};
+var v=shapeEl.value,vol=0,names={bar:'圓棒',tube:'圓管'};
 if(v==='plate'){
 vol=parseFloat(document.getElementById('pl').value)*parseFloat(document.getElementById('pw').value)*parseFloat(document.getElementById('pt').value)/1000;
 }else if(v==='bar'){
