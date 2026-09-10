@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>忠鍵AI · 冷鍛智能體</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,sans-serif;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{background:#0b1220;color:#e8ecf4;display:flex;flex-direction:column;overflow:hidden;position:fixed;width:100%}
+header{background:linear-gradient(135deg,#011640,#0d3a6e);padding:14px 16px 12px;flex-shrink:0;box-shadow:0 2px 14px #00000066;z-index:5}
+.hrow{display:flex;align-items:center;gap:10px}
+.logo{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,#1267e9,#7342dc);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.htxt{flex:1;min-width:0}
+.htxt h1{font-size:17px;font-weight:800;color:#fff}
+.htxt .s{font-size:11px;color:#9db4e8;margin-top:1px}
+.hbtn{background:#ffffff1c;border:1px solid #ffffff2b;color:#dbe7ff;border-radius:9px;padding:7px 11px;font-size:12.5px;cursor:pointer;flex-shrink:0}
+.hbtn:active{transform:scale(.93)}
+
+/* 模式列 */
+#modeRow{display:flex;gap:7px;padding:10px 16px 4px;flex-shrink:0;overflow-x:auto}
+.mbtn{flex-shrink:0;background:#ffffff10;border:1px solid #ffffff22;color:#9db4e8;border-radius:20px;padding:7px 13px;font-size:12.5px;cursor:pointer;white-space:nowrap}
+.mbtn.active{background:#1267e9;border-color:#1267e9;color:#fff;font-weight:700}
+
+/* 聊天區 */
+#chat{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px 6px}
+.msg{display:flex;gap:9px;margin-bottom:14px;animation:fadein .22s}
+@keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.av{width:32px;height:32px;border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px}
+.msg.user{flex-direction:row-reverse}
+.msg.user .av{background:#2fad60;color:#fff}
+.msg.ai .av{background:linear-gradient(135deg,#1267e9,#7342dc);color:#fff}
+.bub{max-width:78%;padding:11px 14px;border-radius:14px;font-size:15px;line-height:1.7;white-space:pre-wrap;word-break:break-word}
+.msg.user .bub{background:#1e5ed8;color:#fff;border-top-right-radius:4px}
+.msg.ai .bub{background:#1a2438;color:#e6ebf5;border-top-left-radius:4px;border:1px solid #ffffff12}
+.typing .bub{color:#8fa3c8;font-style:italic}
+
+/* 快捷提問 */
+#quick{flex-shrink:0;display:flex;gap:8px;padding:8px 14px;overflow-x:auto}
+.qbtn{flex-shrink:0;background:#1267e91f;border:1px solid #1267e955;color:#8db4ff;border-radius:16px;padding:8px 13px;font-size:12.5px;cursor:pointer;white-space:nowrap}
+.qbtn:active{background:#1267e944}
+
+/* 輸入列 */
+#inputRow{flex-shrink:0;display:flex;gap:9px;padding:10px 14px 24px;background:#0b1220;border-top:1px solid #ffffff12}
+#input{flex:1;background:#1a2438;border:1px solid #ffffff22;border-radius:22px;color:#e8ecf4;padding:12px 16px;font-size:15px;outline:none;resize:none;max-height:110px}
+#input:focus{border-color:#1267e9}
+#sendBtn{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#1267e9,#0d3a6e);color:#fff;border:none;font-size:19px;cursor:pointer;flex-shrink:0}
+#sendBtn:active{transform:scale(.9)}
+#sendBtn:disabled{opacity:.35}
+
+/* 設定面板 */
+#panel{display:none;position:fixed;inset:0;background:#000000a8;z-index:50;padding:18px;overflow:auto}
+#panel.show{display:block}
+#panelBox{background:#131c30;border:1px solid #ffffff1c;border-radius:16px;max-width:440px;margin:44px auto;padding:20px}
+#panelBox h3{color:#fff;font-size:17px;margin-bottom:14px}
+#panelBox label{display:block;font-size:12.5px;color:#8fa3c8;margin:12px 0 5px;font-weight:700}
+#panelBox select,#panelBox input{width:100%;background:#0b1220;border:1px solid #ffffff26;border-radius:10px;color:#e8ecf4;padding:12px;font-size:15px}
+#panelBox .row{display:flex;gap:9px;margin-top:16px}
+#panelBox button{flex:1;padding:13px;border:none;border-radius:11px;font-size:15px;cursor:pointer;font-weight:700}
+.hint{font-size:11.5px;color:#5f7192;margin-top:5px;line-height:1.6}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hrow">
+    <div class="logo">🤖</div>
+    <div class="htxt">
+      <h1>忠鍵AI · 冷鍛智能體</h1>
+      <div class="s" id="statusLine">冷鍛工程專屬 · 點 ⚙️ 設定 API Key</div>
+    </div>
+    <button class="hbtn" onclick="togglePanel()">⚙️</button>
+    <button class="hbtn" onclick="goBack()">✕</button>
+  </div>
+</header>
+
+<div id="modeRow">
+  <button class="mbtn active" data-m="forging" onclick="setMode(this)">🏭 冷鍛專家</button>
+  <button class="mbtn" data-m="mold" onclick="setMode(this)">🔩 模具顧問</button>
+  <button class="mbtn" data-m="teach" onclick="setMode(this)">🎓 教學導師</button>
+  <button class="mbtn" data-m="calc" onclick="setMode(this)">🧮 工程計算</button>
+  <button class="mbtn" data-m="free" onclick="setMode(this)">💬 自由對話</button>
+</div>
+
+<div id="chat"></div>
+
+<div id="quick">
+  <button class="qbtn" onclick="quickAsk(this.textContent)">鐓粗比怎麼算？</button>
+  <button class="qbtn" onclick="quickAsk(this.textContent)">SKD11 和鎢鋼模芯怎麼選？</button>
+  <button class="qbtn" onclick="quickAsk(this.textContent)">頭部不滿怎麼排查？</button>
+  <button class="qbtn" onclick="quickAsk(this.textContent)">算 M12x40 六角螺栓用料重</button>
+</div>
+
+<div id="inputRow">
+  <textarea id="input" rows="1" placeholder="問我任何冷鍛問題…" oninput="autoGrow(this)"></textarea>
+  <button id="sendBtn" onclick="send()">➤</button>
+</div>
+
+<div id="panel" onclick="if(event.target===this)togglePanel()">
+  <div id="panelBox">
+    <h3>⚙️ 忠鍵AI 設定</h3>
+    <label>AI 模型</label>
+    <select id="selModel">
+      <option value="agnes-2.5-pro">Agnes 2.5 Pro（最強）</option>
+      <option value="agnes-2.5-flash" selected>Agnes 2.5 Flash（快）</option>
+      <option value="agnes-2.5-pro-alpha">Agnes 2.5 Pro Alpha</option>
+      <option value="agnes-2.5-pro-beta">Agnes 2.5 Pro Beta</option>
+      <option value="agnes-2.0-flash">Agnes 2.0 Flash</option>
+    </select>
+    <label>API Key（Agnes）</label>
+    <input id="inKey" type="password" placeholder="貼上您的 Agnes API Key">
+    <div class="hint">Key 只存在您的手機瀏覽器（localStorage），不會外流。若在大阪主機版使用，也可設定主機端 key。</div>
+    <div class="row">
+      <button style="background:#6b7280;color:#fff" onclick="togglePanel()">取消</button>
+      <button style="background:#1267e9;color:#fff" onclick="saveSet()">✅ 儲存</button>
+    </div>
+    <div class="row">
+      <button style="background:#ffffff14;color:#fca5a5;flex:none;width:46%" onclick="clearChat()">🗑 清空對話</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_URL='https://apihub.agnes-ai.com/v1/chat/completions';
+const MODES={
+  forging:'你是「忠鍵AI」冷鍛專家智能體，精通多工位冷鍛製程：切斷/預鍛/正鍛/擠出/成型/整徑各工位原理、鐓粗比計算、擠出變形率、鍛造力估算、潤滑皮膜、材料（SWCH35K、10B21、合金鋼）特性與冷鍛性、常見不良（頭部不滿/挫屈/裂紋/咬模/偏心/毛邊）的因果與對策。回答時條理分明、必要時用表格與步驟，數字附單位與計算過程。用繁體中文回答。',
+  mold:'你是「忠鍵AI」模具顧問智能體，精通冷鍛模具結構：沖棒/主模/心軸/頂出銷/剪模設計要點、模具鋼材（SKD11、粉末高速鋼ASP/ELMAX、碳化鎢、SKH-9）選用與熱處理、模穴補正、脫模斜度、模套預壓（shrink fit）計算、易損件壽命與保養週期、研磨量預留。回答時條理分明、必要時用表格。用繁體中文回答。',
+  teach:'你是「忠鍵AI」冷鍛教學導師，把複雜的冷鍛知識用淺顯方式教導新進人員。比喻生活化、由淺入深、重點畫線、每段落附「記住這個」小結。可引用口訣：剪→平→粗→細→形→修。用繁體中文回答。',
+  calc:'你是「忠鍵AI」工程計算智能體，精通機械工程計算：重量（體積×密度）、鐓粗比、擠出面縮率、鍛造力估算、熱脹冷縮 ΔL=α·L·ΔT、齒輪參數、單位換算、公差配合。計算時一步一步列出過程，說明每個符號意義，數字保留適當位數並附單位。必要時提醒適用範圍與假設。用繁體中文回答。',
+  free:'你是「忠鍵AI」智慧助理，個性專業親切，任何問題都能協助：工程、製造、材料、日常知識、寫作、翻譯等。用繁體中文回答。'
+};
+let mode='forging';
+let history=JSON.parse(localStorage.getItem('zkai_hist')||'[]');
+
+function goBack(){
+  const standalone = window.navigator.standalone===true || window.matchMedia('(display-mode: standalone)').matches;
+  if(standalone){ location.href='https://chyu3600.github.io/app.html'; }
+  else { location.href='https://chyu3600.github.io/app.html'; }
+}
+function togglePanel(){
+  const p=document.getElementById('panel');
+  if(p.classList.contains('show')){p.classList.remove('show');}
+  else{
+    document.getElementById('inKey').value=localStorage.getItem('agnes_key')||'';
+    document.getElementById('selModel').value=localStorage.getItem('zkai_model')||'agnes-2.5-flash';
+    p.classList.add('show');
+  }
+}
+function saveSet(){
+  localStorage.setItem('agnes_key',document.getElementById('inKey').value.trim());
+  localStorage.setItem('zkai_model',document.getElementById('selModel').value);
+  togglePanel(); refreshStatus();
+}
+function refreshStatus(){
+  const hasKey=!!localStorage.getItem('agnes_key');
+  const m=document.getElementById('selModel')?.selectedOptions[0]?.textContent||localStorage.getItem('zkai_model')||'Flash';
+  document.getElementById('statusLine').textContent=hasKey?`${MODE_LABEL[mode]} · ${m} · 就緒`:'冷鍛工程專屬 · 點 ⚙️ 設定 API Key';
+}
+const MODE_LABEL={forging:'🏭 冷鍛專家',mold:'🔩 模具顧問',teach:'🎓 教學導師',calc:'🧮 工程計算',free:'💬 自由對話'};
+function setMode(btn){
+  document.querySelectorAll('.mbtn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  mode=btn.dataset.m;
+  refreshStatus();
+  if(!history.length){
+    document.getElementById('chat').innerHTML='';
+    addAI(`您好！我是忠鍵AI。目前已切換為【${MODE_LABEL[mode]}】模式。\n\n可以問我冷鍛製程、模具設計、材料選擇、工程計算，或任何問題。`);
+  }
+}
+function autoGrow(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,110)+'px';}
+function quickAsk(q){document.getElementById('input').value=q;send();}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;')}
+function addUser(t){
+  const d=document.createElement('div');d.className='msg user';
+  d.innerHTML=`<div class="av">👤</div><div class="bub">${esc(t)}</div>`;
+  document.getElementById('chat').appendChild(d);scrollBottom();
+}
+function addAI(t,cls){
+  const d=document.createElement('div');d.className='msg ai '+(cls||'');
+  d.innerHTML=`<div class="av">🤖</div><div class="bub">${esc(t)}</div>`;
+  document.getElementById('chat').appendChild(d);scrollBottom();return d;
+}
+function scrollBottom(){const c=document.getElementById('chat');setTimeout(()=>c.scrollTop=c.scrollHeight,30);}
+function clearChat(){history=[];localStorage.removeItem('zkai_hist');document.getElementById('chat').innerHTML='';greet();}
+
+async function send(){
+  const inp=document.getElementById('input');
+  const q=inp.value.trim();if(!q)return;
+  const key=localStorage.getItem('agnes_key');
+  if(!key){addAI('⚠️ 請先點右上角 ⚙️ 設定 API Key（Agnes）才能開始對話。');togglePanel();return;}
+  inp.value='';autoGrow(inp);
+  addUser(q);
+  history.push({role:'user',content:q});
+  const typing=addAI('思考中…','typing');
+  try{
+    const model=localStorage.getItem('zkai_model')||'agnes-2.5-flash';
+    const res=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+      body:JSON.stringify({model,messages:[{role:'system',content:MODES[mode]},...history.slice(-12)]})});
+    const data=await res.json();
+    const ans=data.choices?.[0]?.message?.content||('發生錯誤：'+(data.error?.message||JSON.stringify(data).slice(0,120)));
+    typing.querySelector('.bub').textContent=ans;
+    history.push({role:'assistant',content:ans});
+    localStorage.setItem('zkai_hist',JSON.stringify(history.slice(-24)));
+  }catch(e){
+    typing.querySelector('.bub').textContent='❌ 連線失敗：'+e.message+'（請確認網路或 API Key）';
+  }
+  scrollBottom();
+}
+document.getElementById('input').addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}
+});
+
+function greet(){
+  if(history.length){
+    history.forEach(m=>{
+      if(m.role==='user')addUser(m.content);
+      else if(m.role==='assistant')addAI(m.content);
+    });
+    addAI('（已載入先前的對話，繼續聊吧！）');
+  }else{
+    addAI(`您好！我是「忠鍵AI」冷鍛智能體 🤖\n\n我熟悉：\n🏭 多工位冷鍛製程（切斷→預鍛→正鍛→擠出→成型→整徑）\n🔩 模具結構與鋼材選用\n🧮 工程計算（料重、鐓粗比、鍛造力、熱脹冷縮…）\n\n上排可切換模式，也可直接提問！`);
+  }
+  refreshStatus();
+}
+greet();
+</script>
+</body>
+</html>
