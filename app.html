@@ -209,7 +209,24 @@ function switchTab(p){
   document.querySelectorAll('#tabbar .tb').forEach(tb=>tb.classList.toggle('active', tb.dataset.p===p));
   document.getElementById(p==='home'?'content':'p-'+p).scrollTop = 0;
 }
-function open2(url){ window.open(url, '_blank'); }
+function open2(url){
+  // 偵測是否在「主畫面 App」模式（standalone）：
+  // 該模式下 target=_blank / window.open 會被 iOS 忽略 → 必須直接跳轉
+  const standalone = window.navigator.standalone === true
+    || window.matchMedia('(display-mode: standalone)').matches;
+  if(standalone){
+    location.href = url;
+  }else{
+    const w = window.open(url, '_blank');
+    if(!w){ location.href = url; }  // 彈窗被擋也直接跳
+  }
+}
+// 把所有 qcard 的 target=_blank 轉為 open2()（修 iOS standalone 無反應問題）
+document.querySelectorAll('a.qcard').forEach(a=>{
+  a.removeAttribute('target');
+  const href = a.getAttribute('href');
+  a.setAttribute('onclick', 'open2("'+href+'");return false;');
+});
 function toast(m){
   let t = document.getElementById('__t');
   if(!t){ t=document.createElement('div'); t.id='__t';
