@@ -263,9 +263,13 @@ setInterval(tick, 5000); tick();
     const box = el.parentElement;            // .marq
     const wrap = box.parentElement;          // .notice
     el.classList.remove('static');
-    box.style.removeProperty('--noticeW');
+    wrap.style.removeProperty('--noticeW');
+    wrap.style.removeProperty('--noticeDur');
+    // 重新觸發：先把 keyframes 換回預設、再還原，避免中途更新 --noticeW 不生效
+    el.style.animation = 'none';
     // 需要先重置到滾動初始狀態才能量測寬度
     requestAnimationFrame(()=>{
+      el.style.animation = '';
       const tw = el.scrollWidth, bw = box.clientWidth;
       // 短文字也滾動：補上左側的空白讓它跑出一個循環
       const dist = Math.max(tw, bw) + bw;     // 文字較短时用框寬，較長時用文字寬
