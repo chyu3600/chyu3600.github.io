@@ -269,7 +269,7 @@ setInterval(tick, 5000); tick();
       const tw = el.scrollWidth, bw = box.clientWidth;
       // 短文字也滾動：補上左側的空白讓它跑出一個循環
       const dist = Math.max(tw, bw) + bw;     // 文字較短时用框寬，較長時用文字寬
-      const dur = Math.max(10, Math.min(60, dist / 45));  // 45px/秒，10–60 秒
+      const dur = Math.ceil(dist / 25);       // 固定慢速：25px/秒（長文字循环久、短文字循环短，速度都一樣）
       wrap.style.setProperty('--noticeW', -dist + 'px');
       wrap.style.setProperty('--noticeDur', dur + 's');
     });
