@@ -281,7 +281,7 @@ setInterval(tick, 5000); tick();
     el.textContent = t;
     startMarquee();
   }
-  fetch('http://129.225.180.201/forge/api/forging?t=' + Date.now())
+  fetch('https://futn.duckdns.org/forge/api/forging?t=' + Date.now())
     .then(r=>r.json())
     .then(d=>{
       if(d && d.notice && d.notice.trim()){
