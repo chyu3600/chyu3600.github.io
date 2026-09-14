@@ -54,9 +54,13 @@ body{background:#f2f4f8;overflow:hidden;position:fixed;width:100%}
 .ic-navy{background:linear-gradient(135deg,#0558e3,#0349c2)}
 
 /* ===== 公告/跑馬燈 ===== */
-.notice{display:flex;align-items:center;gap:8px;background:#f0f5ff;border:1px solid #d9e6ff;border-radius:10px;padding:9px 12px;margin-top:2px;font-size:13px;color:#2a4a8a}
-.notice .tag{background:#1163f0;color:#fff;font-size:10.5px;padding:2px 8px;border-radius:6px;flex-shrink:0;font-weight:700}
-.notice .txt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.notice{display:flex;align-items:center;gap:8px;background:#f0f5ff;border:1px solid #d9e6ff;border-radius:10px;padding:9px 12px;margin-top:2px;font-size:13px;color:#2a4a8a;overflow:hidden}
+.notice .tag{background:#1163f0;color:#fff;font-size:10.5px;padding:2px 8px;border-radius:6px;flex-shrink:0;font-weight:700;position:relative;z-index:2}
+.notice .marq{flex:1;overflow:hidden;position:relative;min-width:0;height:1.2em;line-height:1.2em}
+.notice .txt{white-space:nowrap;display:inline-block;position:absolute;left:100%;top:0;animation:noticeRun var(--noticeDur,18s) linear infinite}
+.notice .txt.static{position:static;left:auto;animation:none;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+@keyframes noticeRun{from{transform:translateX(0)}to{transform:translateX(var(--noticeW,-100vw))}}
+@media (prefers-reduced-motion:reduce){.notice .txt{animation:none;position:static;left:auto;max-width:100%;overflow:hidden;text-overflow:ellipsis}}
 
 /* ===== 底部導航 ===== */
 #tabbar{position:absolute;bottom:0;left:0;right:0;background:#ffffffee;backdrop-filter:blur(14px);border-top:1px solid #e8ecf3;display:flex;padding:6px 0 22px;z-index:20}
@@ -125,7 +129,7 @@ body{background:#f2f4f8;overflow:hidden;position:fixed;width:100%}
       </div>
     </div>
     <div id="content">
-      <div class="notice"><span class="tag">公告</span><span class="txt" id="noticeTxt">冷鍛基礎教學已上線，新進人員請先完成四章學習</span></div>
+      <div class="notice"><span class="tag">公告</span><span class="marq"><span class="txt" id="noticeTxt">冷鍛基礎教學已上線，新進人員請先完成四章學習</span></span></div>
 
       <div class="sec-title"><span class="bar-ico"></span>快捷入口</div>
       <div class="grid">
@@ -250,21 +254,46 @@ function tick(){
 }
 setInterval(tick, 5000); tick();
 
-// ===== 公告：從編輯後台抓最新內容（失敗就保留預設文字）=====
+// ===== 公告：從編輯後台抓最新內容（失敗就保留預設文字）；跑馬燈滾動 =====
 (function(){
   const el = document.getElementById('noticeTxt');
   if(!el) return;
+  // 啟動跑馬燈：文字寬 vs 框寬，決定滾動距離與速度（短文字不滾）
+  function startMarquee(){
+    const box = el.parentElement;            // .marq
+    const wrap = box.parentElement;          // .notice
+    el.classList.remove('static');
+    box.style.removeProperty('--noticeW');
+    // 需要先重置到滾動初始狀態才能量測寬度
+    requestAnimationFrame(()=>{
+      const tw = el.scrollWidth, bw = box.clientWidth;
+      if(tw <= bw - 4){                        // 文字放得下 → 不滾動
+        el.classList.add('static');
+        return;
+      }
+      const dist = tw + bw;                   // 從右進、完全出左邊
+      const dur = Math.max(10, Math.min(60, dist / 45));  // 45px/秒，10–60 秒
+      wrap.style.setProperty('--noticeW', -dist + 'px');
+      wrap.style.setProperty('--noticeDur', dur + 's');
+    });
+  }
+  function setNotice(t){
+    el.textContent = t;
+    startMarquee();
+  }
   fetch('http://129.225.180.201/forge/api/forging?t=' + Date.now())
     .then(r=>r.json())
     .then(d=>{
       if(d && d.notice && d.notice.trim()){
-        el.textContent = d.notice.trim();
-        el.parentElement.classList.add('has-custom');
+        setNotice(d.notice.trim());
+        el.parentElement.parentElement.classList.add('has-custom');
       } else if(d && d.updatedAt){
-        el.textContent = '冷鍛基礎教學已上線，新進人員請先完成四章學習（更新：' + d.updatedAt + '）';
+        setNotice('冷鍛基礎教學已上線，新進人員請先完成四章學習（更新：' + d.updatedAt + '）');
       }
     })
     .catch(()=>{ /* 離線或主機忙，保留預設文字 */ });
+  setTimeout(startMarquee, 400);              // 預設文字也先量一次（字體載入後）
+  window.addEventListener('resize', startMarquee);
 })();
 </script>
 </body>
