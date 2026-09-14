@@ -57,10 +57,7 @@ body{background:#f2f4f8;overflow:hidden;position:fixed;width:100%}
 .notice{display:flex;align-items:center;gap:8px;background:#f0f5ff;border:1px solid #d9e6ff;border-radius:10px;padding:9px 12px;margin-top:2px;font-size:13px;color:#2a4a8a;overflow:hidden}
 .notice .tag{background:#1163f0;color:#fff;font-size:10.5px;padding:2px 8px;border-radius:6px;flex-shrink:0;font-weight:700;position:relative;z-index:2}
 .notice .marq{flex:1;overflow:hidden;position:relative;min-width:0;height:1.2em;line-height:1.2em}
-.notice .txt{white-space:nowrap;display:inline-block;position:absolute;left:100%;top:0;animation:noticeRun var(--noticeDur,18s) linear infinite}
-.notice .txt.static{position:static;left:auto;animation:none;overflow:hidden;text-overflow:ellipsis;max-width:100%}
-@keyframes noticeRun{from{transform:translateX(0)}to{transform:translateX(var(--noticeW,-100vw))}}
-@media (prefers-reduced-motion:reduce){.notice .txt{animation:none;position:static;left:auto;max-width:100%;overflow:hidden;text-overflow:ellipsis}}
+.notice .txt{white-space:nowrap;display:inline-block;position:absolute;left:100%;top:0;will-change:transform}
 
 /* ===== 底部導航 ===== */
 #tabbar{position:absolute;bottom:0;left:0;right:0;background:#ffffffee;backdrop-filter:blur(14px);border-top:1px solid #e8ecf3;display:flex;padding:6px 0 22px;z-index:20}
@@ -265,23 +262,28 @@ setInterval(tick, 5000); tick();
     el.classList.remove('static');
     wrap.style.removeProperty('--noticeW');
     wrap.style.removeProperty('--noticeDur');
-    // 重新觸發：先把 keyframes 換回預設、再還原，避免中途更新 --noticeW 不生效
-    el.style.animation = 'none';
-    // 需要先重置到滾動初始狀態才能量測寬度
-    requestAnimationFrame(()=>{
-      el.style.animation = '';
-      const tw = el.scrollWidth, bw = box.clientWidth;
-      // 短文字也滾動：補上左側的空白讓它跑出一個循環
-      const dist = Math.max(tw, bw) + bw;     // 文字較短时用框寬，較長時用文字寬
-      const dur = Math.ceil(dist / 25);       // 固定慢速：25px/秒（長文字循环久、短文字循环短，速度都一樣）
-      wrap.style.setProperty('--noticeW', -dist + 'px');
-      wrap.style.setProperty('--noticeDur', dur + 's');
-    });
+    // 持續跑：先用 JS 動畫跑，讓它不受 iOS「減少動態效果」影響
+    // 文字換成新的時（setNotice），再觸發 startMarquee 一次就夠
+    const tw = el.scrollWidth, bw = box.clientWidth;
+    const dist = Math.max(tw, bw) + bw;
+    const dur = Math.ceil(dist / 25);       // 固定慢速：25px/秒
+    const anim = el.animate(
+      [
+        {transform: 'translateX(0)'},
+        {transform: `translateX(${-dist}px)`}
+      ],
+      {duration: dur * 1000, iterations: Infinity, direction: 'normal', timingFunction: 'linear'}
+    );
+    anim.onfinish = function(){};           // 無限循環不會 finish
+    wrap.__marqueeAnim = anim;              // 存起來，文字換時可以 cancel
   }
   function setNotice(t){
     el.textContent = t;
+    // 取消舊動畫，重跑一次
+    if(wrapRef().__marqueeAnim){ wrapRef().__marqueeAnim.cancel(); }
     startMarquee();
   }
+  function wrapRef(){ return document.querySelector('.notice'); }
   fetch('https://futn.duckdns.org/forge/api/forging?t=' + Date.now())
     .then(r=>r.json())
     .then(d=>{
