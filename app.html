@@ -267,11 +267,8 @@ setInterval(tick, 5000); tick();
     // 需要先重置到滾動初始狀態才能量測寬度
     requestAnimationFrame(()=>{
       const tw = el.scrollWidth, bw = box.clientWidth;
-      if(tw <= bw - 4){                        // 文字放得下 → 不滾動
-        el.classList.add('static');
-        return;
-      }
-      const dist = tw + bw;                   // 從右進、完全出左邊
+      // 短文字也滾動：補上左側的空白讓它跑出一個循環
+      const dist = Math.max(tw, bw) + bw;     // 文字較短时用框寬，較長時用文字寬
       const dur = Math.max(10, Math.min(60, dist / 45));  // 45px/秒，10–60 秒
       wrap.style.setProperty('--noticeW', -dist + 'px');
       wrap.style.setProperty('--noticeDur', dur + 's');
