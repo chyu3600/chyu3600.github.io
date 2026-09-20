@@ -97,6 +97,7 @@ footer{background:#fff;border-top:1px solid #e5e9f2;padding:10px 12px;padding-bo
 
 <script>
 const API_URL = 'https://apihub.agnes-ai.com/v1/chat/completions';
+const DEFAULT_KEY = 'sk-LR1IvLKTFcl7nb2r2hWLwjubblVZHeDQM8B92jWzivYBS3PP';
 const chat = document.getElementById('chat');
 const inp = document.getElementById('inp');
 const send = document.getElementById('send');
@@ -109,7 +110,11 @@ let history = [];
 const SYS = {role:'system', content:'你是「忠鍵大模型」，忠鍵工程計算工具箱網站的 AI 助理，擅長機械、材料、製造、工程計算與程式設計。回答精準、條理分明，需要時計算過程一步一步列出，數字保留適當位數。必要時可用簡潔的表格或條列。用繁體中文回答。'};
 
 // ---------- API Key 視窗 ----------
-function getKey(){ return localStorage.getItem('agnes_key') || ''; }
+function getKey(){
+  let k = localStorage.getItem('agnes_key');
+  if(!k){ localStorage.setItem('agnes_key', DEFAULT_KEY); k = DEFAULT_KEY; }
+  return k;
+}
 function openKeyModal(prefill){
   keyModal.classList.remove('hide');
   keyInp.value = prefill === false ? '' : getKey();
