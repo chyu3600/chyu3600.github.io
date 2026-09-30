@@ -377,7 +377,42 @@
     function addCustom() {
       const th = document.getElementById("inpTh").value.trim();
       const zh = document.getElementById("inpZh").value.trim();
-      if (!th || !zh) { alert("請同時輸入泰文和中文 / กรุณากรอกภาษาไทยและภาษาจีน"); return; }
+      const hint = document.getElementById("transHint");
+      if (!zh) { hint.style.display = "block"; hint.textContent = "⚠️ 請先填中文 / กรุณากรอกภาษาจีน"; return; }
+      if (!th) {
+        // 泰文空的 → 立即觸發翻譯，翻譯完成後自動新增
+        hint.style.display = "block";
+        hint.textContent = "⏳ 正在翻譯，稍候自動新增…";
+        fetch(AGNES_URL, {
+          method: "POST",
+          headers: { "Authorization": "Bearer " + AGNES_KEY, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: "agnes-2.5-flash",
+            messages: [
+              { role: "system", content: "你是中泰文翻譯器。只輸出泰文，不要解釋。" },
+              { role: "user", content: zh }
+            ],
+            temperature: 0.2,
+            max_tokens: 500
+          })
+        }).then(function (r) { return r.json(); })
+          .then(function (d) {
+            const m = d.choices && d.choices[0] && d.choices[0].message;
+            const thOut = (m ? (m.content || m.reasoning_content || "").trim() : "").trim();
+            document.getElementById("inpTh").value = thOut;
+            hint.style.display = "none";
+            CUSTOM.push([thOut, zh]);
+            saveCustom();
+            document.getElementById("inpTh").value = "";
+            document.getElementById("inpZh").value = "";
+            renderCustom();
+          })
+          .catch(function () {
+            hint.style.display = "block";
+            hint.textContent = "⚠️ 翻譯失敗，請手動輸入泰文再按新增 / แปลล้มเหลว";
+          });
+        return;
+      }
       CUSTOM.push([th, zh]);
       saveCustom();
       document.getElementById("inpTh").value = "";
