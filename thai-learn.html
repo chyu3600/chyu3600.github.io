@@ -123,6 +123,17 @@
       font-size: 14px;
       cursor: pointer;
     }
+    .translate-hint {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 10px;
+      line-height: 1.5;
+      padding: 8px 10px;
+      background: #f5f1e8;
+      border-radius: 8px;
+      border: 1px dashed var(--line);
+    }
+    .translate-hint b { color: var(--zh); }
     .custom-list {
       margin-top: 12px;
     }
@@ -166,15 +177,16 @@
       <h2>➕ เพิ่มคำใหม่ / 加入自訂詞</h2>
       <div class="inputs">
         <div class="field">
-          <label>ภาษาไทย / 泰文</label>
-          <input id="inpTh" placeholder="如：สวัสดี" />
+          <label>ภาษาจีน / 中文（你只會中文，填這裡）</label>
+          <input id="inpZh" placeholder="如：你好、主管、鋼" oninput="translateToThai()" />
         </div>
         <div class="field">
-          <label>ภาษาจีน / 中文</label>
-          <input id="inpZh" placeholder="如：你好" />
+          <label>ไทย / 泰文（自動翻譯，可手動改）</label>
+          <input id="inpTh" placeholder="填中文後自動出現" />
         </div>
         <button class="add-btn" onclick="addCustom()">新增</button>
       </div>
+      <div class="translate-hint" id="transHint" style="display:none;">⏳ 翻譯中… /กำลังแปล…</div>
       <div class="custom-list" id="customList"></div>
     </div>
     <div id="list"></div>
@@ -306,6 +318,48 @@
         btns[2].onclick = function () { speakBoth(th, zh); };
         list.appendChild(div);
       });
+    }
+
+    // ── 中文 → 泰文 自動翻譯（Agnes API）──
+    const AGNES_KEY = "sk-LR1IvLKTFcl7nb2r2hWLwjubblVZHeDQM8B92jWzivYBS3PP";
+    const AGNES_URL = "https://apihub.agnes-ai.com/v1/chat/completions";
+    let transTimer = null;
+
+    function translateToThai() {
+      const zh = document.getElementById("inpZh").value.trim();
+      const hint = document.getElementById("transHint");
+      const thField = document.getElementById("inpTh");
+      if (!zh) { thField.value = ""; hint.style.display = "none"; return; }
+      // 防抖：停止輸入後 600ms 才呼叫
+      clearTimeout(transTimer);
+      hint.style.display = "block";
+      hint.textContent = "⏳ 翻譯中…";
+      transTimer = setTimeout(function () {
+        fetch(AGNES_URL, {
+          method: "POST",
+          headers: { "Authorization": "Bearer " + AGNES_KEY, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: "agnes-2.5-flash",
+            messages: [
+              {
+                role: "system",
+                content: "你是中泰文翻譯器。使用者會輸入中文，你只輸出對應的泰文單字或短語（1-3個字），不要解釋、不要其他文字。"
+              },
+              { role: "user", content: zh }
+            ],
+            temperature: 0.2,
+            max_tokens: 30
+          })
+        }).then(function (r) { return r.json(); })
+          .then(function (d) {
+            const th = (d.choices && d.choices[0] && d.choices[0].message && d.choices[0].message.content || "").trim();
+            thField.value = th;
+            hint.style.display = "none";
+          })
+          .catch(function () {
+            hint.textContent = "⚠️ 翻譯失敗，請手動輸入泰文 / แปลล้มเหลว";
+          });
+      }, 600);
     }
 
     // ── 自訂詞（localStorage 持久化）──
