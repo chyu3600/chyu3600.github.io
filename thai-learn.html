@@ -348,11 +348,12 @@
               { role: "user", content: zh }
             ],
             temperature: 0.2,
-            max_tokens: 30
+            max_tokens: 500
           })
         }).then(function (r) { return r.json(); })
           .then(function (d) {
-            const th = (d.choices && d.choices[0] && d.choices[0].message && d.choices[0].message.content || "").trim();
+            const m = d.choices && d.choices[0] && d.choices[0].message;
+            const th = (m ? (m.content || m.reasoning_content || "").trim() : "").trim();
             thField.value = th;
             hint.style.display = "none";
           })
