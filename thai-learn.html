@@ -78,6 +78,71 @@
     }
     button.speak.zhbtn { background: var(--zh); }
     button.speak.both { background: #7a4e00; }
+    .custom-box {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 16px;
+    }
+    .custom-box h2 {
+      font-size: 15px;
+      color: var(--th);
+      margin-bottom: 10px;
+    }
+    .custom-box .inputs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: flex-end;
+    }
+    .custom-box .field {
+      flex: 1 1 140px;
+    }
+    .custom-box .field label {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .custom-box input {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 14px;
+      background: #fff;
+    }
+    .custom-box .add-btn {
+      flex: 0 0 auto;
+      border: 0;
+      background: var(--th);
+      color: #fff;
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .custom-list {
+      margin-top: 12px;
+    }
+    .custom-item {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px;
+      margin-bottom: 8px;
+      background: #fff;
+    }
+    .custom-item .row { margin-top: 8px; }
+    .custom-item .del {
+      border: 0;
+      background: #e05a5a;
+      color: #fff;
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 12px;
+      cursor: pointer;
+    }
     .now {
       position: sticky;
       bottom: 12px;
@@ -97,6 +162,21 @@
       <p>กดปุ่มเพื่อฟังภาษาไทยหรือภาษาจีน · 點按鈕聽泰文或中文</p>
     </header>
     <div class="cats" id="cats"></div>
+    <div class="custom-box">
+      <h2>➕ เพิ่มคำใหม่ / 加入自訂詞</h2>
+      <div class="inputs">
+        <div class="field">
+          <label>ภาษาไทย / 泰文</label>
+          <input id="inpTh" placeholder="如：สวัสดี" />
+        </div>
+        <div class="field">
+          <label>ภาษาจีน / 中文</label>
+          <input id="inpZh" placeholder="如：你好" />
+        </div>
+        <button class="add-btn" onclick="addCustom()">新增</button>
+      </div>
+      <div class="custom-list" id="customList"></div>
+    </div>
     <div id="list"></div>
     <div class="now" id="now"></div>
   </div>
@@ -183,10 +263,13 @@
       const b = new SpeechSynthesisUtterance(zh);
       b.lang = "zh-TW";
       b.rate = 0.85;
-      a.onend = function () { window.speechSynthesis.speak(b); };
       const now = document.getElementById("now");
       now.style.display = "block";
-      now.textContent = "ไทย → จีน / 泰文再中文：" + th;
+      now.textContent = "ไทย → 中文 / 泰文再中文：" + th;
+      a.onend = function () {
+        now.textContent = "ไทย → 中文 / 泰文再中文：" + zh;
+        window.speechSynthesis.speak(b);
+      };
       b.onend = function () { now.style.display = "none"; };
       window.speechSynthesis.speak(a);
     }
@@ -225,9 +308,68 @@
       });
     }
 
+    // ── 自訂詞（localStorage 持久化）──
+    let CUSTOM = [];
+    try {
+      const saved = localStorage.getItem("thai_custom_words");
+      if (saved) CUSTOM = JSON.parse(saved);
+    } catch (e) { CUSTOM = []; }
+
+    function saveCustom() {
+      localStorage.setItem("thai_custom_words", JSON.stringify(CUSTOM));
+    }
+
+    function addCustom() {
+      const th = document.getElementById("inpTh").value.trim();
+      const zh = document.getElementById("inpZh").value.trim();
+      if (!th || !zh) { alert("請同時輸入泰文和中文 / กรุณากรอกภาษาไทยและภาษาจีน"); return; }
+      CUSTOM.push([th, zh]);
+      saveCustom();
+      document.getElementById("inpTh").value = "";
+      document.getElementById("inpZh").value = "";
+      renderCustom();
+    }
+
+    function delCustom(i) {
+      CUSTOM.splice(i, 1);
+      saveCustom();
+      renderCustom();
+    }
+
+    function renderCustom() {
+      const box = document.getElementById("customList");
+      box.innerHTML = "";
+      if (!CUSTOM.length) {
+        box.innerHTML = '<div style="color:var(--muted);font-size:13px;">尚無自訂詞 / ยังไม่มียศ</div>';
+        return;
+      }
+      CUSTOM.forEach(function (row, i) {
+        const th = row[0], zh = row[1];
+        const div = document.createElement("div");
+        div.className = "custom-item";
+        div.innerHTML =
+          '<div class="th" style="font-size:18px;"></div>' +
+          '<div class="zh"></div>' +
+          '<div class="row">' +
+          '<button class="speak">ฟังไทย 聽泰文</button>' +
+          '<button class="speak zhbtn">ฟังจีน 聽中文</button>' +
+          '<button class="speak both">先泰後中</button>' +
+          '<button class="del">刪除</button></div>';
+        div.querySelector(".th").textContent = th;
+        div.querySelector(".zh").textContent = zh;
+        const btns = div.querySelectorAll("button");
+        btns[0].onclick = function () { speak(th, "th-TH"); };
+        btns[1].onclick = function () { speak(zh, "zh-TW"); };
+        btns[2].onclick = function () { speakBoth(th, zh); };
+        btns[3].onclick = function () { delCustom(i); };
+        box.appendChild(div);
+      });
+    }
+
     window.speechSynthesis.onvoiceschanged = function () {};
     renderCats();
     renderList();
+    renderCustom();
   </script>
 </body>
 </html>
